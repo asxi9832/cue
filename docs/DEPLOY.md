@@ -46,9 +46,21 @@ The build clones the private slides repository, so it needs a read-only token.
 
 4. Save and deploy. The site is live at `https://<project>.pages.dev` and is **public until step 4 is done**.
 
-## 4. Cloudflare Access login wall (about 10 minutes)
+## 4. Login wall
 
-1. Cloudflare dashboard → **Zero Trust**. Pick a team name and the Free plan, which allows up to 50 users.
+Pick one. The password gate is built in and takes two minutes. Cloudflare Access gives each person their own email login, but setting up Zero Trust can get stuck, and did on 2026-10-02.
+
+### Option A: password gate (about 2 minutes)
+
+1. Pages project → **Settings → Environment variables** → add `CUE_PASSWORD`, set it to **Encrypt**, and use a long passphrase.
+2. Redeploy. Every page now asks for the password once per device, and remembers it for 30 days. **Lock** in the library signs a device out.
+3. `/remote/` stays open, so phones never need the password. The QR session code is the key.
+
+The gate lives in `functions/_middleware.js` and runs on Cloudflare before any file is served. Changing the password signs out every device.
+
+### Option B: Cloudflare Access (about 10 minutes)
+
+1. Cloudflare dashboard → **Zero Trust**. Pick a team name and the Free plan, which allows up to 50 users. If "Get started" does nothing, try another browser or contact Cloudflare support.
 2. **Settings → Authentication**: one-time PIN by email is on by default. Add Google or Microsoft sign-in if you like.
 3. **Access → Applications → Add an application → Self-hosted**:
    - Name: `Cue`
@@ -62,6 +74,7 @@ The build clones the private slides repository, so it needs a read-only token.
    The remote page holds no content. Notes travel over the session channel, and the long random session ID in the QR code is the key. The lobby key never reaches this path.
 5. In the Pages project, go to **Settings → General → Access policy** and enable it, so preview deployments are protected too.
 6. Test it in a private window: `/` should ask you to log in, and `/remote/` should load without asking.
+7. Remove `CUE_PASSWORD` so people do not have to log in twice.
 
 ## 5. Publish on push from the slides repository
 
@@ -84,5 +97,6 @@ Open the site in Chrome, Brave or Edge and choose **Install Cue** from the addre
 | Pairing screen says "Phone remote is off" | `SUPABASE_URL` or `SUPABASE_ANON_KEY` is missing. Redeploy after adding them. |
 | Phone stuck on "Waiting for the screen" | The screen tab is closed, or the Supabase project is paused. |
 | Library is empty | The build could not clone slides: check the token and `SLIDES_REPO`, and read the Pages build log. |
-| The phone asks to log in | The `remote` bypass application is missing or its path is wrong. |
+| The phone asks to log in | Option B: the `remote` bypass application is missing or its path is wrong. |
+| Everyone was signed out | `CUE_PASSWORD` changed. That is expected. |
 | Join page says it needs a lobby key | `CUE_LOBBY_KEY` is not set. |

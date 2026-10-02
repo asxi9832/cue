@@ -244,13 +244,20 @@ function viewPair() {
   paintStatus();
 }
 
+// Fetch the cartridge list. A 401 means the password gate's session expired, so go log in again.
+async function cartridges() {
+  const res = await fetch('/c/index.json', { cache: 'no-cache' });
+  if (res.status === 401) { location.href = '/login?next=' + encodeURIComponent('/' + location.hash); throw new Error('signed out'); }
+  return (await res.json()).cartridges;
+}
+
 async function viewLibrary() {
-  view.innerHTML = `<div class="lib"><div class="top"><span class="logo"><i></i>cue</span><div class="r"><button class="pill" data-remote-pill></button></div></div>
+  view.innerHTML = `<div class="lib"><div class="top"><span class="logo"><i></i>cue</span><div class="r"><button class="pill" data-remote-pill></button>${CFG.dev ? '' : '<a class="btn sm ghost" href="/logout" title="Sign out of this device">Lock</a>'}</div></div>
     <main><h2>Cartridges</h2><div class="grid" id="grid"></div></main></div>`;
   view.querySelector('[data-remote-pill]').onclick = openPairModal;
   paintStatus();
   let list = [];
-  try { list = (await (await fetch('/c/index.json', { cache: 'no-cache' })).json()).cartridges; } catch { }
+  try { list = await cartridges(); } catch { }
   const grid = $('#grid');
   if (!list.length) { grid.outerHTML = '<div class="empty">No cartridges yet. Add a folder with a cartridge.json to your slides repository and push.</div>'; return; }
   grid.innerHTML = list.map(c => {
@@ -265,7 +272,7 @@ async function viewLibrary() {
 
 async function viewPlay(id) {
   let list = [];
-  try { list = (await (await fetch('/c/index.json', { cache: 'no-cache' })).json()).cartridges; } catch { }
+  try { list = await cartridges(); } catch { }
   const cart = list.find(c => c.id === id);
   if (!cart) { location.hash = '#/library'; return; }
   S.cart = cart; S.slides = []; S.index = 0; S.id = null; S.build = 0; S.blackout = false;

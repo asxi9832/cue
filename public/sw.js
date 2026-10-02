@@ -16,6 +16,7 @@ async function networkFirst(req) {
   const cache = await caches.open(VERSION);
   try {
     const res = await fetch(req);
+    if (res.type === 'opaqueredirect' || res.status === 401) return res; // signed out: let the login page through
     // Behind a login wall an expired session returns the login page instead of JSON; keep the cached copy then.
     const json = req.url.endsWith('.json');
     if (usable(res) && (!json || (res.headers.get('content-type') || '').includes('json'))) { cache.put(req, res.clone()); return res; }
