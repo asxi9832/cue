@@ -55,6 +55,7 @@ function onMessage(m) {
     if (state.deck && (!deck || deck.id !== state.deck) && Date.now() - helloAt > 3000) hello(); // missed the deck: ask again
     paint();
   }
+  else if (m.t === 'who') hello(); // the screen (re)connected and is asking who is here
   else if (m.t === 'report') showReport(m.report);
   else if (m.t === 'denied' && m.rid === rid) toast('Another device is in control');
   else if (m.t === 'end') { away = true; gate('Screen disconnected', 'Waiting for it to come back. This happens when the screen reloads. If Cue was closed there, scan the new QR code.'); }

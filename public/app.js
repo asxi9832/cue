@@ -29,7 +29,7 @@ const relay = openRelay({ session, config: CFG, onMessage: onRelay, onStatus: st
   // Announce on every (re)connect so remotes that waited through a reload resync at once.
   const up = (st.local === 'on' && S.relay.local !== 'on') || (st.remote === 'on' && S.relay.remote !== 'on');
   S.relay = st; paintStatus();
-  if (up) setTimeout(() => { sendDeck(); sendState(); }, 50);
+  if (up) setTimeout(() => { send({ t: 'who' }); sendDeck(); sendState(); }, 50);
 } });
 const lobby = openLobby({ config: CFG, key: session, info: lobbyInfo() });
 const send = m => relay.send({ ...m, from: SELF });

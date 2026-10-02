@@ -14,4 +14,4 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           if [ -z "$SUPABASE_URL" ]; then echo "SUPABASE_URL secret not set; skipping"; exit 0; fi
-          curl -fsS -o /dev/null -w "%{http_code}\n" "$SUPABASE_URL/rest/v1/" -H "apikey: $SUPABASE_ANON_KEY"
+          curl -fsS -o /dev/null -w "%{http_code}\n" "$SUPABASE_URL/auth/v1/health" -H "apikey: $SUPABASE_ANON_KEY"
