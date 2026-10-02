@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b0c0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Cue remote</title>
+<link rel="stylesheet" href="/remote/remote.css">
+<script src="/remote/config.js"></script>
+<script type="module" src="/remote/remote.js"></script>
+</head>
+<body>
+<div id="app" class="app" data-mode="connecting">
+
+  <header class="hd">
+    <div class="l"><i class="dot" id="link"></i><span class="deck" id="deckTitle">Cue</span></div>
+    <div class="r"><button class="timer" id="timer" aria-label="Start or pause timer"><span id="timerText">00:00</span><small id="timerOf"></small></button><span class="clock" id="clock"></span></div>
+  </header>
+
+  <section class="now">
+    <div class="pos"><span id="pos">-</span><span class="dots" id="dots"></span><span class="tag" id="tag"></span></div>
+    <h1 id="slideTitle">Connecting...</h1>
+  </section>
+
+  <section class="notes" id="notes"><div class="msg" id="msg">Connecting to the screen...</div></section>
+
+  <section class="next"><span>Next</span><b id="nextTitle">-</b></section>
+
+  <nav class="tools">
+    <button data-act="slides"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Slides</span></button>
+    <button data-act="blackout" id="bBlack"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 5l18 14"/></svg><span>Blackout</span></button>
+    <button data-act="rehearse" id="bReh"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 9v4l2 2M9 2h6"/></svg><span>Rehearse</span></button>
+    <button data-act="reset"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/></svg><span>Reset timer</span></button>
+    <button data-act="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></button>
+  </nav>
+
+  <div class="pad" id="pad">
+    <button class="prev" data-act="prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button>
+    <button class="nextb" data-act="next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg><span>Next</span></button>
+  </div>
+
+  <div class="ro" id="ro">Another device is in control.<button data-act="take">Take control</button></div>
+</div>
+
+<div class="sheet" id="sheet" hidden><div class="sh"><div class="grab"></div><div id="sheetBody"></div></div></div>
+
+<div class="gate" id="gate" hidden>
+  <div class="gbox">
+    <div class="logo"><i></i>cue</div>
+    <h2 id="gateTitle">Join a screen</h2>
+    <p id="gateText">Scan the QR code on the presenting screen with your camera.</p>
+    <form id="joinForm"><input id="joinCode" placeholder="Or paste a session link" autocomplete="off" autocapitalize="off" spellcheck="false"><button>Join</button></form>
+  </div>
+</div>
+<div class="toasts" id="toasts"></div>
+</body>
+</html>

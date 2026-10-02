@@ -1,0 +1,13 @@
+{
+  "name": "cue",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A presentation player for self-contained HTML decks, with a phone remote and presenter notes.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "validate": "node scripts/validate.mjs"
+  },
+  "engines": { "node": ">=18" }
+}

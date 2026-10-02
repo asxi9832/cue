@@ -1,0 +1,15 @@
+{
+  "cue": 1,
+  "id": "your-deck-id",
+  "title": "Cartridge Title",
+  "subtitle": "One sentence that tells the presenter what this deck is.",
+  "author": "Your name or company",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "notes": "notes.md",
+  "duration": 30,
+  "aspect": "16:9",
+  "accent": "#ffb547",
+  "background": "#0d0f12",
+  "tags": []
+}

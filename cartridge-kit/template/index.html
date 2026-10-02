@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cartridge Title</title>
+<style>
+/* ---------- tokens: replace with the client's brand ---------- */
+:root{--bg:#0d0f12;--text:#f2efe9;--muted:rgba(242,239,233,.6);--accent:#ffb547;--ease:cubic-bezier(.22,1,.36,1);
+  --display:Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans)}
+
+/* ---------- fixed 1920x1080 stage, scaled to fit any screen ---------- */
+#stage{position:fixed;left:50%;top:50%;width:1920px;height:1080px;transform-origin:50% 50%}
+.slide{position:absolute;inset:0;padding:150px 170px;display:flex;flex-direction:column;justify-content:center;visibility:hidden;opacity:0}
+.slide.active{visibility:visible;opacity:1;transition:opacity .5s}
+
+/* ---------- builds: elements with data-b="N" appear on click N ---------- */
+.slide [data-b]{opacity:0;transform:translateY(30px);transition:opacity .8s var(--ease),transform 1s var(--ease)}
+.slide.active [data-b].on{opacity:1;transform:none}
+
+h1{font-family:var(--display);font-weight:400;font-size:150px;line-height:1;letter-spacing:-.02em}
+h2{font-family:var(--display);font-weight:400;font-size:96px;line-height:1.02;letter-spacing:-.02em}
+.lead{font-size:36px;line-height:1.45;color:var(--muted);max-width:1200px;margin-top:40px}
+.eyebrow{font-size:20px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin-bottom:30px}
+ul.points{list-style:none;margin-top:60px;display:flex;flex-direction:column;gap:26px;font-size:44px}
+ul.points li::before{content:"";display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--accent);margin-right:26px;vertical-align:middle}
+</style>
+</head>
+<body>
+<main id="stage">
+
+  <!-- Every slide: class="slide", a permanent data-id (kebab case, never reuse or renumber), and a data-title. -->
+  <section class="slide" data-id="title" data-title="Opening title">
+    <div class="eyebrow">Cartridge template</div>
+    <h1>Your title here.</h1>
+    <p class="lead">A one-line promise to the audience.</p>
+  </section>
+
+  <section class="slide" data-id="three-points" data-title="Three points">
+    <h2>A slide with builds.</h2>
+    <ul class="points">
+      <li data-b="1">The first click reveals this.</li>
+      <li data-b="2">The second click reveals this.</li>
+      <li data-b="3">The third click reveals this.</li>
+    </ul>
+  </section>
+
+  <section class="slide" data-id="questions" data-title="Questions">
+    <h1>Questions?</h1>
+  </section>
+
+</main>
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const stage = $('#stage');
+const slides = $$('.slide');
+slides.forEach(s => { s._max = Math.max(0, ...$$('[data-b]', s).map(e => +e.dataset.b)); });
+
+const fit = () => { const k = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = `translate(-50%,-50%) scale(${k})`; };
+addEventListener('resize', fit); fit();
+
+let cur = -1, build = 0;
+function setBuild(s, b) { $$('[data-b]', s).forEach(e => e.classList.toggle('on', +e.dataset.b <= b)); }
+function show(i, b) {
+  if (i < 0 || i >= slides.length) return;
+  if (slides[cur]) slides[cur].classList.remove('active');
+  cur = i; build = b;
+  setBuild(slides[cur], b);
+  slides[cur].classList.add('active');
+  history.replaceState(null, '', '#' + (cur + 1));
+  cueState();
+}
+function step(d) {
+  const s = slides[cur];
+  if (d > 0) { if (build < s._max) { build++; setBuild(s, build); cueState(); } else show(cur + 1, 0); }
+  else { if (build > 0) { build--; setBuild(s, build); cueState(); } else if (cur > 0) show(cur - 1, slides[cur - 1]._max); }
+}
+
+/* ================= Cue player protocol (cue/1). Copy this block unchanged. ================= */
+const EMBED = window.parent !== window;
+const cuePost = m => { if (EMBED) parent.postMessage(Object.assign({ cue: 1 }, m), location.origin === 'null' ? '*' : location.origin); };
+const cueReady = () => cuePost({ type: 'ready', title: document.title, slides: slides.map(s => ({ id: s.dataset.id, title: s.dataset.title, builds: s._max })) });
+function cueState() { if (cur < 0) return; const s = slides[cur]; cuePost({ type: 'state', index: cur, id: s.dataset.id, build, builds: s._max, total: slides.length }); }
+addEventListener('message', e => {
+  const d = e.data;
+  if (e.source !== parent || !d || d.cue !== 1) return;
+  if (d.type === 'hello') { cueReady(); cueState(); }
+  else if (d.type === 'next') step(1);
+  else if (d.type === 'prev') step(-1);
+  else if (d.type === 'goto') { const i = Math.max(0, Math.min(slides.length - 1, d.index | 0)); show(i, Math.min(d.build | 0, slides[i]._max)); }
+});
+/* ================= end protocol ================= */
+
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key;
+  if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) { e.preventDefault(); step(1); }
+  else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); step(-1); }
+  else if (k === 'Home') show(0, 0);
+  else if (k === 'End') show(slides.length - 1, 0);
+  else if ((k === 'f' || k === 'F') && !EMBED) document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {});
+  else if (EMBED) cuePost({ type: 'key', key: k }); // let the player handle B, P, Q, F and Escape
+});
+
+const start = Math.min(Math.max((parseInt(location.hash.slice(1), 10) || 1) - 1, 0), slides.length - 1);
+show(start, 0);
+cueReady();
+})();
+</script>
+</body>
+</html>

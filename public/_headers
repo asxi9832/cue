@@ -1,0 +1,12 @@
+/*
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+/sw.js
+  Cache-Control: no-cache
+/config.js
+  Cache-Control: no-cache
+/c/index.json
+  Cache-Control: no-cache
+/remote/*
+  Cache-Control: no-cache
