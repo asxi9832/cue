@@ -37,7 +37,7 @@ The build clones the private slides repository, so it needs a read-only token.
 
 | Variable | Value | Encrypt |
 |---|---|---|
-| `SLIDES_REPO` | `asxi9832/slides` | no |
+| `SLIDES_REPO` | `your-github-name/slides`, the repository that holds your cartridges | no |
 | `GITHUB_TOKEN` | the token from step 2 | **yes** |
 | `SUPABASE_URL` | from step 1 | no |
 | `SUPABASE_ANON_KEY` | from step 1 | no |
