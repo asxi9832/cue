@@ -490,4 +490,13 @@ function route() {
 addEventListener('hashchange', route);
 route();
 
-if ('serviceWorker' in navigator && !CFG.dev) navigator.serviceWorker.register('/sw.js').catch(() => {});
+if ('serviceWorker' in navigator && !CFG.dev) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  // A new version took over: reload to pick it up, but never in the middle of a presentation.
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) { hadController = true; return; }
+    const reload = () => { if (!frame) location.reload(); else setTimeout(reload, 5000); };
+    reload();
+  });
+}

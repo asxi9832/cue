@@ -27,7 +27,7 @@ async function networkFirst(req) {
     return (await cache.match(req, { ignoreSearch: true })) || (req.mode === 'navigate' ? cache.match('/index.html') : Response.error());
   }
 }
-// Stale while revalidate: deck files and libraries play instantly from cache and refresh in the background.
+// Stale while revalidate: only for versioned third-party libraries (the Supabase client).
 async function swr(req) {
   const cache = await caches.open(VERSION);
   const hit = await cache.match(req);
@@ -40,8 +40,8 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin === location.origin) {
-    if (url.pathname.startsWith('/remote/') && !url.pathname.startsWith('/remote/lib/')) return; // the phone remote is always live
-    if (req.mode === 'navigate' || url.pathname === '/c/index.json' || url.pathname.endsWith('config.js')) e.respondWith(networkFirst(req));
-    else e.respondWith(swr(req));
+    if (url.pathname.startsWith('/j/') || (url.pathname.startsWith('/remote/') && !url.pathname.startsWith('/remote/lib/'))) return; // phone pages are always live
+    // Network first for everything of ours: online always gets the newest app and decks; the cache is the offline fallback.
+    e.respondWith(networkFirst(req));
   } else if (url.hostname === 'cdn.jsdelivr.net') e.respondWith(swr(req));
 });
