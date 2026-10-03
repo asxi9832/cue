@@ -1,6 +1,6 @@
 # Cue
 
-A presentation player for self-contained HTML decks ("cartridges"), with a phone remote, presenter notes, rehearsal timing, and offline playback.
+A presentation player for self-contained HTML decks ("cartridges"), with a phone/tablet/computer remote, presenter notes, rehearsal timing, and offline playback.
 
 **The flow:** log in → pair a phone by scanning a QR code (or skip) → pick a cartridge → share your screen.
 
