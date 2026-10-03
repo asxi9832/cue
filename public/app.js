@@ -167,7 +167,7 @@ addEventListener('message', e => {
 // One event per deck per browser session. Phones join on a separate public channel (cue-aud:<code>),
 // never the presenter channel. Phone messages are only hints to refresh; the database is the truth.
 const AUD = { code: null, key: null, ch: null, deck: null, step: null, wall: { count: 0, recent: [] }, results: {}, qs: { featured: null, items: [] }, host: { featured: null, items: [] }, timer: null, needs: new Set(), poll: null, reacts: [] };
-const audUrl = () => AUD.code ? `${CFG.remoteBase || location.origin}/j#${AUD.code}` : '';
+const audUrl = () => AUD.code ? `${CFG.remoteBase || location.origin}/j/#${AUD.code}` : ''; // trailing slash: no redirect hop on slow networks
 const hasAudience = () => HAS_RELAY && S.slides.some(s => s.interact);
 
 async function audienceStart() {
@@ -276,7 +276,7 @@ function pushDeck() {
     if (it.type === 'words') results[it.id] = { kind: 'words', words: (AUD.results[it.id] || {}).words || [] };
   });
   const url = audUrl();
-  toDeck({ type: 'aud', code: AUD.code, url, short: url.replace(/^https?:\/\//, '').replace(/#.*$/, ''), qr: qrData(url), wall: AUD.wall, results, questions: AUD.qs });
+  toDeck({ type: 'aud', code: AUD.code, url, short: url.replace(/^https?:\/\//, '').replace(/\/?#.*$/, ''), qr: qrData(url), wall: AUD.wall, results, questions: AUD.qs });
 }
 function sendAud() {
   send({ t: 'aud', aud: AUD.code ? { code: AUD.code, url: audUrl(), count: AUD.wall.count || 0, step: AUD.step, filter: !(S.cart && S.cart.audience && S.cart.audience.filter === false), questions: AUD.host } : null });
