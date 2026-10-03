@@ -5,6 +5,7 @@
   "description": "A presentation player for self-contained HTML decks, with a phone remote and presenter notes.",
   "type": "module",
   "scripts": {
+    "start": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
     "dev": "node scripts/dev.mjs",
     "validate": "node scripts/validate.mjs"

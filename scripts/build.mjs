@@ -8,6 +8,7 @@
 //   SLIDES_REPO=owner/slides GITHUB_TOKEN=... shallow-clone a private repo (used on Cloudflare Pages)
 // Relay (optional, enables phone remotes): SUPABASE_URL, SUPABASE_ANON_KEY
 // Lobby (optional, lists live sessions to logged-in devices): CUE_LOBBY_KEY
+// Remote base (optional): CUE_REMOTE_BASE, the address phones use to reach this Cue, when it differs from the browser's
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -32,7 +33,7 @@ function cartridgeSource(env) {
     return dest;
   }
   const sibling = resolve(ROOT, '..', 'slides');
-  return existsSync(sibling) ? sibling : null;
+  return existsSync(sibling) ? sibling : join(ROOT, 'examples'); // a fresh clone still has something to play
 }
 
 export function build(env = process.env) {
@@ -69,7 +70,7 @@ export function build(env = process.env) {
   const relay = env.SUPABASE_URL && env.SUPABASE_ANON_KEY ? { url: env.SUPABASE_URL, anonKey: env.SUPABASE_ANON_KEY } : null;
   const dev = env.CUE_DEV === '1';
   // The remote config is served outside the login wall, so it never carries the lobby key.
-  writeFileSync(join(DIST, 'config.js'), `window.CUE_CONFIG=${JSON.stringify({ relay, lobby: env.CUE_LOBBY_KEY || null, dev })};\n`);
+  writeFileSync(join(DIST, 'config.js'), `window.CUE_CONFIG=${JSON.stringify({ relay, lobby: env.CUE_LOBBY_KEY || null, remoteBase: env.CUE_REMOTE_BASE || null, dev })};\n`);
   writeFileSync(join(DIST, 'remote', 'config.js'), `window.CUE_CONFIG=${JSON.stringify({ relay, dev })};\n`);
 
   hash.update(String(Date.now()));

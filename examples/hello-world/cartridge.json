@@ -1,0 +1,15 @@
+{
+  "cue": 1,
+  "id": "hello-world",
+  "title": "Hello, World",
+  "subtitle": "Your first cartridge: what Cue is, how to drive it, and how to make your own.",
+  "author": "Cue",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "notes": "notes.md",
+  "duration": 3,
+  "aspect": "16:9",
+  "accent": "#8b7bff",
+  "background": "#07070c",
+  "tags": ["starter", "tutorial"]
+}

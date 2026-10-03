@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 Rampant LLC
-// Local dev server: builds from ../slides (or SLIDES_DIR) and serves dist/. Rebuilds when the app shell is requested.
+// Local server (npm start): builds from ../slides (or SLIDES_DIR, or examples/) and serves dist/. Rebuilds when the app shell is requested.
 import { createServer } from 'node:http';
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
+import { networkInterfaces } from 'node:os';
 import { build } from './build.mjs';
 
 const DIST = join(dirname(dirname(fileURLToPath(import.meta.url))), 'dist');
@@ -14,7 +15,10 @@ const PORT = +process.env.PORT || 8787;
 // Optional .env (gitignored) for relay settings during local testing.
 const dotenv = join(dirname(DIST), '.env');
 const fileEnv = existsSync(dotenv) ? Object.fromEntries(readFileSync(dotenv, 'utf8').split('\n').filter(l => /^\w+=/.test(l)).map(l => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()])) : {};
-const env = { ...fileEnv, ...process.env, CUE_DEV: '1', SLIDES_DIR: process.env.SLIDES_DIR || '../slides' };
+// Phones cannot open "localhost", so QR codes point at this computer's address on the local network.
+const lan = Object.values(networkInterfaces()).flat().find(i => i && i.family === 'IPv4' && !i.internal);
+const env = { ...fileEnv, ...process.env, CUE_DEV: '1', SLIDES_DIR: process.env.SLIDES_DIR || fileEnv.SLIDES_DIR || '../slides' };
+if (!env.CUE_REMOTE_BASE && lan) env.CUE_REMOTE_BASE = `http://${lan.address}:${PORT}`;
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4' };
 
 build(env);
@@ -27,4 +31,4 @@ createServer((req, res) => {
   if (!existsSync(file)) { res.writeHead(404).end('Not found'); return; }
   res.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
   createReadStream(file).pipe(res);
-}).listen(PORT, () => console.log(`Cue dev server on http://localhost:${PORT}`));
+}).listen(PORT, () => console.log(`Cue on http://localhost:${PORT}${lan ? `  (phones on this Wi-Fi: ${env.CUE_REMOTE_BASE})` : ''}`));

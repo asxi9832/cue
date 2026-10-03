@@ -2,7 +2,7 @@
 
 Instructions for an AI agent, or a person, making a presentation that Cue can play.
 
-A **cartridge** is a self-contained HTML slide deck in its own folder, plus a manifest and presenter notes. Cue loads it in a frame, drives it through a small message protocol, and sends the notes to the presenter's phone. The reference cartridge is `ai-zero-to-sixty` in the slides repository. Study it before building anything ambitious.
+A **cartridge** is a self-contained HTML slide deck in its own folder, plus a manifest and presenter notes. Cue loads it in a frame, drives it through a small message protocol, and sends the notes to the presenter's phone. Two references: `examples/hello-world` in the cue repository is an unbranded deck with the full engine (particles, motion, builds), and `cartridge-kit/template` is the bare minimum. Start from Hello World when the deck should look designed.
 
 ## 1. Folder layout
 
@@ -90,7 +90,7 @@ Optional intro paragraph.
 
 1. **Brief.** Get the audience, goal, length, brand (colors, fonts, logo files), copy rules, and any source material. Ask when something is missing; do not invent a brand.
 2. **Outline first.** Propose the slide list with IDs, titles, build counts and a one-line purpose for each. Get approval before designing.
-3. **Build from the template.** Copy the brand template (`slides/templates/<brand>/`) if one exists, otherwise `cartridge-kit/template/`, to `slides/<id>/`. Replace the tokens with the brand. Keep the protocol block intact.
+3. **Build from a starting point.** Copy the brand template (`slides/templates/<brand>/`) if one exists, otherwise `examples/hello-world/`, or `cartridge-kit/template/` for something minimal, to `slides/<id>/`. Replace the tokens with the brand. Keep the protocol block intact.
 4. **Write notes alongside the slides,** not after. Each build gets a `**Click N:**` line.
 5. **Validate.** From the cue repository, run `node scripts/validate.mjs ../slides/<id>`. Fix every error.
 6. **Play it in Cue.** Run `npm run dev` in the cue repository, which builds from `../slides`, and open http://localhost:8787. Load the cartridge, then open the presenter window with P. Step through every slide and build, forward and backward, and check the notes stay in sync.

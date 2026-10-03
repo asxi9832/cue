@@ -4,6 +4,22 @@ A presentation player for self-contained HTML decks ("cartridges"), with a phone
 
 **The flow:** log in → pair a phone by scanning a QR code (or skip) → pick a cartridge → share your screen.
 
+## Quick start with an AI agent
+
+Open this repository in Claude Code, Codex, or any coding agent, and say:
+
+> Set me up with Cue, then help me make my first cartridge.
+
+The agent follows [AGENTS.md](AGENTS.md) and [docs/SETUP.md](docs/SETUP.md), and asks you a few questions on the way: whether to run Cue on this computer or free on Cloudflare, whether you want a phone remote, and how to keep your decks private.
+
+Or do it by hand:
+
+```bash
+git clone https://github.com/asxi9832/cue.git && cd cue && npm start
+```
+
+Then open http://localhost:8787 and play the Hello World cartridge.
+
 ## Features
 
 - **Library** of cartridges, built from a private `slides` repository on every push.
@@ -28,16 +44,19 @@ scripts/
 cartridge-kit/
   CARTRIDGE.md     the spec and agent instructions for building a cartridge
   template/        a minimal working cartridge to copy
+examples/
+  hello-world/     the starter cartridge: particles, motion, builds, notes
+docs/SETUP.md      agent-guided setup, with decision gates
 docs/DEPLOY.md     Cloudflare Pages, Access and Supabase setup
 ```
 
 ## Local development
 
 ```bash
-npm run dev
+npm start
 ```
 
-This serves http://localhost:8787 and builds cartridges from `../slides`. Without Supabase variables, the phone remote is off, but the presenter window works. To test the phone relay locally, add `SUPABASE_URL=... SUPABASE_ANON_KEY=...` to the command.
+This serves http://localhost:8787 and builds cartridges from `../slides`, or from `examples/` if that folder does not exist. Without Supabase variables, the phone remote is off, but the presenter window works. To test the phone relay locally, add `SUPABASE_URL=... SUPABASE_ANON_KEY=...` to the command.
 
 ```bash
 node scripts/validate.mjs ../slides/ai-zero-to-sixty
@@ -59,6 +78,6 @@ Copyright (C) 2026 Rampant LLC.
 
 Cue is free software: you can redistribute it and modify it under the terms of the [GNU Affero General Public License, version 3](LICENSE). If you run a modified version of Cue as a service for others, you must offer them its source code. The app links to the source from the library and the remote; point `SOURCE_URL` in `public/app.js` and the link in `public/remote/remote.js` at your fork.
 
-**Your decks are yours.** The cartridge kit (`cartridge-kit/`, including the template and the cue/1 protocol block) is separately licensed under the [MIT License](cartridge-kit/LICENSE), so presentations you build with it can be licensed however you like, including kept private and confidential.
+**Your decks are yours.** The cartridge kit (`cartridge-kit/`, including the template and the cue/1 protocol block) and the Hello World example (`examples/`) are separately licensed under the [MIT License](cartridge-kit/LICENSE), so presentations you build with it can be licensed however you like, including kept private and confidential.
 
 Third-party code: `public/vendor/qrcode.js` is QR Code Generator by Kazuhiko Arase, under the MIT License.

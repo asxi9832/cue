@@ -17,7 +17,7 @@ const SOURCE_URL = 'https://github.com/asxi9832/cue';
 /* ---------------- session + relay ---------------- */
 let session = sessionStorage.getItem('cue:session');
 if (!session) { session = randomId(); sessionStorage.setItem('cue:session', session); }
-const remoteUrl = `${location.origin}/remote/#s=${session}`;
+const remoteUrl = `${CFG.remoteBase || location.origin}/remote/#s=${session}`;
 
 const S = {
   cart: null, notes: { intro: '', slides: {} }, slides: [],

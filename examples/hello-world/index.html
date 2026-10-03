@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hello, World</title>
+<!--
+  Hello, World: the starter cartridge for Cue.
+  SPDX-License-Identifier: MIT. Copy it, change everything, keep it private if you like.
+  One self-contained file: no fonts, images or scripts to download. Edit freely.
+-->
+<style>
+:root{
+  --bg:#07070c; --text:#f4f3ff; --muted:rgba(244,243,255,.64); --faint:rgba(244,243,255,.34); --line:rgba(244,243,255,.12);
+  --violet:#8b7bff; --cyan:#4fd1ff; --pink:#ff6fae; --amber:#ffb547;
+  --ease:cubic-bezier(.22,1,.36,1); --ease-io:cubic-bezier(.65,0,.35,1);
+  --display:ui-sans-serif,system-ui,-apple-system,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text)}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body.idle{cursor:none}
+
+/* ---------- atmosphere ---------- */
+.aurora{position:fixed;inset:0;overflow:hidden;pointer-events:none}
+.aurora i{position:absolute;left:50%;top:50%;width:80vmax;height:80vmax;margin:-40vmax 0 0 -40vmax;transition:transform 4s var(--ease)}
+.aurora i b{position:absolute;inset:0;border-radius:50%;filter:blur(40px);animation:drift 26s ease-in-out infinite alternate}
+.aurora .a1 b{background:radial-gradient(circle,rgba(139,123,255,.55),rgba(139,123,255,.12) 38%,transparent 62%)}
+.aurora .a2 b{background:radial-gradient(circle,rgba(79,209,255,.42),rgba(79,209,255,.08) 38%,transparent 62%);animation-duration:31s;animation-delay:-8s}
+.aurora .a3 b{background:radial-gradient(circle,rgba(255,111,174,.38),transparent 58%);animation-duration:37s;animation-delay:-16s}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(6vw,-4vh) scale(1.12)}100%{transform:translate(-5vw,5vh) scale(.94)}}
+body[data-sec="0"] .a1{transform:translate(-38vw,-34vh)} body[data-sec="0"] .a2{transform:translate(40vw,38vh)} body[data-sec="0"] .a3{transform:translate(34vw,-42vh)}
+body[data-sec="1"] .a1{transform:translate(34vw,-36vh)} body[data-sec="1"] .a2{transform:translate(-40vw,40vh)} body[data-sec="1"] .a3{transform:translate(-24vw,-34vh)}
+body[data-sec="2"] .a1{transform:translate(-34vw,38vh)} body[data-sec="2"] .a2{transform:translate(38vw,-30vh)} body[data-sec="2"] .a3{transform:translate(14vw,42vh)}
+body[data-sec="3"] .a1{transform:translate(0,-40vh)} body[data-sec="3"] .a2{transform:translate(-40vw,30vh)} body[data-sec="3"] .a3{transform:translate(40vw,30vh)}
+#gl{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 50%,transparent 55%,rgba(0,0,0,.6) 100%)}
+.grain{position:fixed;inset:-100%;pointer-events:none;opacity:.06;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation:grain 1.2s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-4%)}60%{transform:translate(-4%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+
+/* ---------- HUD ---------- */
+.hud{position:fixed;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:0 clamp(18px,3vw,48px);pointer-events:none;font-family:var(--mono);font-size:clamp(10px,.72vw,13px);letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+.hud.top{top:clamp(14px,2.4vh,30px)} .hud.bot{bottom:clamp(14px,2.4vh,30px)}
+.hud .brand{display:flex;align-items:center;gap:12px}
+.hud .brand i{width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber)}
+.hud .sec{display:flex;gap:14px;align-items:baseline}
+.hud .sec #secNum{color:var(--violet)}
+#secName{display:inline-block;transition:opacity .5s,transform .6s var(--ease)}
+#secName.swap{opacity:0;transform:translateY(-8px)}
+.hud .bar{position:relative;flex:1;max-width:38vw;height:1px;background:var(--line);margin-right:24px}
+.hud .bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--violet),var(--cyan),var(--pink));box-shadow:0 0 12px var(--violet);transition:width .9s var(--ease)}
+.hud .count{display:flex;align-items:center;gap:18px}
+#dots{display:flex;gap:6px}
+#dots i{width:5px;height:5px;border-radius:50%;background:var(--faint);transition:background .3s,transform .3s}
+#dots i.on{background:var(--cyan);transform:scale(1.3)}
+#hint{position:fixed;left:50%;bottom:clamp(44px,7vh,80px);transform:translateX(-50%);z-index:20;font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);transition:opacity 1s;pointer-events:none;white-space:nowrap}
+#hint.gone{opacity:0}
+#hint kbd{font-family:inherit;border:1px solid var(--line);padding:3px 8px;margin:0 3px;color:var(--muted);border-radius:6px}
+
+/* ---------- stage, slides, reveals (the engine expects these) ---------- */
+#stage{position:fixed;left:50%;top:50%;width:1920px;height:1080px;transform-origin:50% 50%;z-index:10}
+.slide{position:absolute;inset:0;padding:150px 170px 140px;display:flex;flex-direction:column;justify-content:center;visibility:hidden;opacity:0;pointer-events:none}
+.slide.active{visibility:visible;opacity:1;pointer-events:auto;transition:opacity .4s}
+.slide.out-fwd,.slide.out-back{visibility:visible;animation:outF .75s var(--ease) forwards}
+.slide.out-back{animation-name:outB}
+@keyframes outF{from{opacity:1;transform:none;filter:none}to{opacity:0;transform:translateY(-70px) scale(.985);filter:blur(14px)}}
+@keyframes outB{from{opacity:1;transform:none;filter:none}to{opacity:0;transform:translateY(70px) scale(.985);filter:blur(14px)}}
+.rv,.slide [data-b]:not(.x){opacity:0;transform:translateY(34px);filter:blur(10px);transition:opacity .9s var(--ease),transform 1.2s var(--ease),filter 1s var(--ease)}
+.slide.active .rv{opacity:1;transform:none;filter:none;transition-delay:calc(var(--d,0) * 1ms + 180ms)}
+.slide.active [data-b].on:not(.x){opacity:1;transform:none;filter:none;transition-delay:calc(var(--d,0) * 1ms)}
+.split .w{display:inline-block;overflow:hidden;vertical-align:top;padding:0 .04em .16em;margin:0 -.04em -.16em}
+.split .c{display:inline-block;transform:translateY(112%) rotate(6deg);transform-origin:0 100%;opacity:0;transition:transform 1.25s var(--ease),opacity .7s}
+.slide.active .split:not([data-b]) .c,.slide.active .split.on .c{transform:none;opacity:1;transition-delay:calc(var(--base,200ms) + var(--i) * 24ms)}
+
+/* ---------- type ---------- */
+.eyebrow{font-family:var(--mono);font-size:19px;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);display:flex;align-items:center;gap:18px}
+.eyebrow::before{content:"";width:44px;height:1px;background:currentColor;opacity:.7}
+h1,h2{font-family:var(--display);font-weight:700;letter-spacing:-.045em;line-height:.95}
+h1{font-size:210px}
+h2{font-size:112px;line-height:1}
+.hl,.hl .c{background:linear-gradient(100deg,var(--violet),var(--cyan) 45%,var(--pink) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:36px;line-height:1.45;color:var(--muted);max-width:1100px;margin-top:40px}
+.lead b{color:var(--text);font-weight:600}
+.glass{background:linear-gradient(160deg,rgba(244,243,255,.08),rgba(244,243,255,.02));border:1px solid var(--line);border-radius:28px;backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 40px 90px -40px rgba(0,0,0,.8)}
+code,kbd{font-family:var(--mono)}
+
+/* ---------- slide 1: hello ---------- */
+.s-hello{justify-content:flex-end;padding-bottom:170px}
+.s-hello .press{margin-top:60px;display:flex;align-items:center;gap:16px;font-family:var(--mono);font-size:18px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+.s-hello .press kbd{display:inline-grid;place-items:center;width:48px;height:48px;border:1px solid var(--line);border-radius:12px;color:var(--text);font-size:22px;animation:nudge 2.4s var(--ease) infinite}
+@keyframes nudge{0%,60%,100%{transform:none}30%{transform:translateX(8px);border-color:var(--cyan);box-shadow:0 0 24px -4px var(--cyan)}}
+
+/* ---------- slide 2: cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:70px}
+.card{padding:44px 42px 48px;min-height:420px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:-1px;border-radius:28px;padding:1px;background:linear-gradient(140deg,var(--c),transparent 55%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.8}
+.card .n{font-family:var(--mono);font-size:18px;color:var(--c);letter-spacing:.2em}
+.card h3{font-family:var(--display);font-weight:700;font-size:64px;letter-spacing:-.035em;margin:auto 0 18px;padding-top:110px}
+.card p{font-size:26px;line-height:1.45;color:var(--muted)}
+.card code{font-size:23px;color:var(--text);background:rgba(255,255,255,.07);padding:2px 10px;border-radius:8px}
+.card .glyph{position:absolute;right:30px;top:26px;font-family:var(--mono);font-size:30px;color:var(--c);opacity:.9}
+
+/* ---------- slide 3: controls ---------- */
+.drive{display:grid;grid-template-columns:1fr 520px;gap:100px;align-items:center}
+.keys{list-style:none;margin-top:56px;display:flex;flex-direction:column;gap:14px}
+.keys li{display:grid;grid-template-columns:120px 1fr;align-items:center;font-size:32px;color:var(--muted)}
+.keys kbd{justify-self:start;min-width:64px;height:64px;padding:0 18px;display:grid;place-items:center;border:1px solid var(--line);border-bottom-width:3px;border-radius:14px;font-size:26px;color:var(--text);background:rgba(255,255,255,.04)}
+.keys li b{color:var(--text);font-weight:600}
+.phone{width:440px;height:880px;border-radius:64px;padding:18px;background:linear-gradient(160deg,#20202c,#0c0c12);border:1px solid rgba(255,255,255,.14);box-shadow:0 60px 120px -40px #000,0 0 0 8px rgba(255,255,255,.03);position:relative;justify-self:center}
+.phone .scr{position:absolute;inset:18px;border-radius:48px;background:#0b0b11;overflow:hidden;display:flex;flex-direction:column;padding:56px 26px 26px}
+.phone .top{display:flex;justify-content:space-between;font-family:var(--mono);font-size:17px;color:var(--faint)}
+.phone .top b{color:#5fd39a;font-weight:500}
+.phone h5{font-family:var(--display);font-size:32px;letter-spacing:-.02em;margin:22px 0 18px}
+.phone .note{font-size:19px;line-height:1.45;color:var(--muted);padding:14px 16px;border-radius:16px;margin-bottom:10px;border:1px solid transparent}
+.phone .note.cur{background:rgba(79,209,255,.1);border-color:rgba(79,209,255,.4);color:var(--text)}
+.phone .note.up{background:rgba(255,255,255,.04);border-color:var(--line)}
+.phone .note.up::before{content:"NEXT CLICK";display:block;font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--amber);margin-bottom:4px}
+.phone .pad{margin-top:auto;display:grid;grid-template-columns:38fr 62fr;gap:12px;height:170px}
+.phone .pad span{border-radius:26px;background:rgba(255,255,255,.05);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:30px;color:var(--muted)}
+.phone .pad .nx{background:linear-gradient(160deg,rgba(255,181,71,.22),rgba(255,181,71,.06));border-color:rgba(255,181,71,.45);color:var(--amber);position:relative}
+.phone .pad .nx::after{content:"";position:absolute;width:70px;height:70px;border-radius:50%;border:3px solid var(--amber);opacity:0;animation:tap 2.6s var(--ease) infinite 1.2s}
+@keyframes tap{0%{opacity:.9;transform:scale(.4)}60%,100%{opacity:0;transform:scale(1.8)}}
+
+/* ---------- slide 4: your turn ---------- */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:66px}
+.step{padding:38px 38px 42px}
+.step .n{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;font-family:var(--mono);font-size:22px;color:var(--bg);background:linear-gradient(140deg,var(--violet),var(--cyan));box-shadow:0 0 30px -6px var(--violet)}
+.step h3{font-family:var(--display);font-weight:700;font-size:46px;letter-spacing:-.03em;margin:30px 0 14px;line-height:1.05}
+.step p{font-size:24px;line-height:1.45;color:var(--muted)}
+.step code{font-size:21px;color:var(--text);background:rgba(255,255,255,.07);padding:2px 8px;border-radius:7px}
+.finale{margin-top:70px;font-family:var(--display);font-weight:700;font-size:84px;letter-spacing:-.04em}
+</style>
+</head>
+<body data-sec="0">
+<div class="aurora"><i class="a1"><b></b></i><i class="a2"><b></b></i><i class="a3"><b></b></i></div>
+<canvas id="gl"></canvas>
+<div class="vignette"></div>
+<div class="grain"></div>
+
+<header class="hud top">
+  <div class="brand"><i></i><span>Hello, World</span></div>
+  <div class="sec"><span id="secNum">00</span><span id="secName">Hello</span></div>
+</header>
+<footer class="hud bot">
+  <div class="bar"><i id="prog"></i></div>
+  <div class="count"><span id="dots"></span><span id="cnt">01 / 04</span></div>
+</footer>
+<div id="hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> to move &nbsp;&middot;&nbsp; <kbd>F</kbd> full screen</div>
+
+<main id="stage">
+
+<section data-id="hello" data-title="Hello, world" class="slide s-hello" data-sec="0" data-fx="text:Hello|x=0|y=.5|s=.95|a=1">
+  <div class="eyebrow rv" style="--d:1400">Your first cartridge</div>
+  <h1 class="split" style="--base:1600ms;margin-top:26px">Hello, <span class="hl">world.</span></h1>
+  <p class="lead rv" style="--d:2300">This whole presentation is one HTML file. Cue plays it, your phone drives it, and you can rewrite every pixel.</p>
+  <div class="press rv" style="--d:2800"><kbd>&rarr;</kbd>Press to begin</div>
+</section>
+
+<section data-id="cartridge" data-title="What a cartridge is" class="slide" data-sec="1" data-fx="sphere|x=.62|s=.62|a=.45">
+  <div class="eyebrow rv">What you are looking at</div>
+  <h2 class="split" style="margin-top:26px">A cartridge is <span class="hl">just a web page.</span></h2>
+  <div class="cards">
+    <div class="card glass" data-b="1" style="--c:var(--violet)"><span class="n">01</span><span class="glyph">&lt;/&gt;</span><h3>Slides</h3><p>Every <code>&lt;section&gt;</code> is a slide, with a permanent <code>data-id</code>.</p></div>
+    <div class="card glass" data-b="2" style="--c:var(--cyan)"><span class="n">02</span><span class="glyph">+1</span><h3>Builds</h3><p>Add <code>data-b="1"</code> to reveal anything one click at a time. Like this card.</p></div>
+    <div class="card glass" data-b="3" style="--c:var(--pink)"><span class="n">03</span><span class="glyph">#</span><h3>Notes</h3><p><code>notes.md</code> follows you on your phone, click by click.</p></div>
+  </div>
+</section>
+
+<section data-id="controls" data-title="Drive it from anywhere" class="slide" data-sec="2" data-fx="network|x=.55|s=.9|a=.35">
+  <div class="drive">
+    <div>
+      <div class="eyebrow rv">Controls</div>
+      <h2 class="split" style="margin-top:26px">Drive it from <span class="hl">anywhere.</span></h2>
+      <ul class="keys">
+        <li data-b="1"><kbd>&rarr;</kbd><span><b>Next</b>, or the clicker in your hand</span></li>
+        <li data-b="1" style="--d:120"><kbd>&larr;</kbd><span><b>Back</b>, builds included</span></li>
+        <li data-b="2"><kbd>Q</kbd><span><b>Pair a phone</b> with a QR code</span></li>
+        <li data-b="2" style="--d:120"><kbd>P</kbd><span><b>Presenter window</b> on this computer</span></li>
+        <li data-b="3"><kbd>B</kbd><span><b>Blackout</b> when you want the room</span></li>
+        <li data-b="3" style="--d:120"><kbd>F</kbd><span><b>Full screen</b></span></li>
+      </ul>
+    </div>
+    <div class="phone rv" style="--d:500">
+      <div class="scr">
+        <div class="top"><span><b>&bull;</b> Hello, World</span><span>03 / 04</span></div>
+        <h5>Drive it from anywhere</h5>
+        <div class="note cur">Click 1: arrows and clickers work as you expect.</div>
+        <div class="note up">Click 2: scan the QR code and your phone becomes the remote.</div>
+        <div class="note">Click 3: blackout and full screen.</div>
+        <div class="pad"><span>&larr;</span><span class="nx">&rarr;</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-id="your-turn" data-title="Now make your own" class="slide" data-sec="3" data-fx="galaxy|x=.0|y=-.1|s=1.25|a=.6">
+  <div class="eyebrow rv">Your turn</div>
+  <h2 class="split" style="margin-top:26px">Now make <span class="hl">your own.</span></h2>
+  <div class="steps">
+    <div class="step glass" data-b="1"><span class="n">1</span><h3>Copy this folder.</h3><p>Give it a new name and a new <code>id</code> in <code>cartridge.json</code>.</p></div>
+    <div class="step glass" data-b="2"><span class="n">2</span><h3>Ask your agent.</h3><p>Paste the starter prompt from <code>docs/SETUP.md</code>, then describe your talk.</p></div>
+    <div class="step glass" data-b="3"><span class="n">3</span><h3>Push it.</h3><p>Commit to your slides repository. A minute later it is in your library.</p></div>
+  </div>
+  <p class="finale" data-b="4">Go build something <span class="hl">beautiful.</span></p>
+</section>
+
+</main>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// HUD section names, indexed by each slide's data-sec. Rename to match your talk.
+const SECTIONS = ['Hello', 'Cartridges', 'Controls', 'Your turn', '', ''];
+
+/* ================= particle field ================= */
+const FX = (() => {
+  const cv = $('#gl');
+  const gl = cv.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: false });
+  if (!gl) { cv.remove(); return { set() {} }; }
+  const N = 9000;
+  const pos = new Float32Array(N * 3), vel = new Float32Array(N * 3), tgt = new Float32Array(N * 3);
+  const seed = new Float32Array(N), stiff = new Float32Array(N), r1 = new Float32Array(N), r2 = new Float32Array(N), r3 = new Float32Array(N);
+  const jump = new Uint8Array(N);
+  const rand = Math.random;
+  const gauss = () => { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.2831853 * v); };
+  for (let i = 0; i < N; i++) {
+    seed[i] = rand(); stiff[i] = .005 + rand() * .022; r1[i] = rand(); r2[i] = rand(); r3[i] = rand();
+    const a = rand() * 6.283, d = rand() * .05;
+    pos[i * 3] = Math.cos(a) * d; pos[i * 3 + 1] = Math.sin(a) * d; pos[i * 3 + 2] = (rand() - .5) * .05;
+  }
+
+  const VS = `attribute vec3 aPos;attribute float aSeed;
+  uniform float uTime,uAspect,uRotY,uRotX,uScale,uSize,uAlpha;uniform vec2 uCenter;
+  varying float vSeed;varying float vA;
+  void main(){
+    vec3 p=aPos;float s=aSeed*6.2831;
+    p+=0.007*vec3(sin(uTime*1.1+s*7.0),cos(uTime*.9+s*5.0),sin(uTime*.7+s*3.0));
+    float cy=cos(uRotY),sy=sin(uRotY);p=vec3(cy*p.x+sy*p.z,p.y,-sy*p.x+cy*p.z);
+    float cx=cos(uRotX),sx=sin(uRotX);p=vec3(p.x,cx*p.y-sx*p.z,sx*p.y+cx*p.z);
+    p*=uScale;
+    float persp=3.0/max(3.0-p.z,.6);
+    vec2 q=p.xy*persp+uCenter;
+    gl_Position=vec4(q.x/uAspect,q.y,0.0,1.0);
+    gl_PointSize=uSize*persp*(.55+aSeed*.9);
+    float tw=.72+.28*sin(uTime*1.7+s*13.0);
+    vSeed=aSeed;vA=uAlpha*tw*clamp(persp*.9,.25,1.5);
+  }`;
+  const FS = `precision mediump float;varying float vSeed;varying float vA;
+  void main(){
+    float d=length(gl_PointCoord-.5);if(d>.5)discard;
+    float a=smoothstep(.5,0.,d);a=a*a*.6+a*.4;
+    vec3 paper=vec3(.96,.95,1.),stone=vec3(.64,.58,1.),leaf=vec3(.42,.85,1.),mist=vec3(1.,.55,.78);
+    vec3 c=vSeed<.55?paper:(vSeed<.75?stone:(vSeed<.9?leaf:mist));
+    gl_FragColor=vec4(c,a*vA);
+  }`;
+  const sh = (t, src) => { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s)); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  const bPos = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bPos); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'aPos'); gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+  const bSeed = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bSeed); gl.bufferData(gl.ARRAY_BUFFER, seed, gl.STATIC_DRAW);
+  const aSeed = gl.getAttribLocation(prog, 'aSeed'); gl.enableVertexAttribArray(aSeed); gl.vertexAttribPointer(aSeed, 1, gl.FLOAT, false, 0, 0);
+  const U = {}; ['uTime', 'uAspect', 'uRotY', 'uRotX', 'uScale', 'uSize', 'uAlpha', 'uCenter'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.clearColor(0, 0, 0, 0);
+
+  let dpr = 1, aspect = 16 / 9;
+  const resize = () => { dpr = Math.min(window.devicePixelRatio || 1, 2); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; gl.viewport(0, 0, cv.width, cv.height); aspect = innerWidth / innerHeight; };
+  addEventListener('resize', resize); resize();
+  let mx = 0, my = 0, smx = 0, smy = 0;
+  addEventListener('mousemove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
+
+  /* ---- shape generators (unit space, y in -1..1) ---- */
+  const fill = f => { const o = new Float32Array(N * 3); for (let i = 0; i < N; i++) f(i, o, i * 3); return o; };
+  const fromPixels = (pts, W, H, size, extra) => {
+    // pts: flat [x,y,...] in canvas px. Normalize to height `size`, centered.
+    let minx = 1e9, maxx = -1e9, miny = 1e9, maxy = -1e9;
+    for (let k = 0; k < pts.length; k += 2) { const x = pts[k], y = pts[k + 1]; if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y; }
+    const cx = (minx + maxx) / 2, cy = (miny + maxy) / 2, sc = size / Math.max(maxy - miny, (maxx - minx) / 2.4);
+    const cnt = pts.length / 2;
+    return fill((i, o, j) => {
+      if (extra && extra(i, o, j, sc)) return;
+      const k = (Math.random() * cnt | 0) * 2;
+      o[j] = (pts[k] - cx + rand() * 2) * sc; o[j + 1] = -(pts[k + 1] - cy + rand() * 2) * sc; o[j + 2] = (rand() - .5) * .07;
+    });
+  };
+  const raster = (W, H, draw, test) => {
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'); draw(x, W, H);
+    const d = x.getImageData(0, 0, W, H).data, pts = [];
+    for (let y = 0; y < H; y += 2) for (let X = 0; X < W; X += 2) if (test(d[(y * W + X) * 4 + 3], X, y)) pts.push(X, y);
+    return pts;
+  };
+  const G = {
+    text(word) {
+      const W = 1800, H = 520;
+      const pts = raster(W, H, (x) => { x.font = '800 400px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fff'; x.fillText(word, W / 2, H / 2); }, a => a > 128);
+      return fromPixels(pts, W, H, .62);
+    },
+    sphere() { return fill((i, o, j) => { const y = 1 - 2 * (i + .5) / N, rad = Math.sqrt(1 - y * y), th = i * 2.39996; const R = .85 * (r1[i] < .12 ? 1.1 + r2[i] * .7 : 1 + gauss() * .012); o[j] = Math.cos(th) * rad * R; o[j + 1] = y * R; o[j + 2] = Math.sin(th) * rad * R; }); },
+    galaxy() { return fill((i, o, j) => { const arm = i % 3, r = Math.pow(r1[i], .7) * 1.55 + .04, a = arm * 2.0944 + r * 2.4 + gauss() * .32 / (r + .35); o[j] = Math.cos(a) * r; o[j + 2] = Math.sin(a) * r; o[j + 1] = gauss() * .035 * (1.6 - r * .6); if (r1[i] < .08) { o[j] = gauss() * .12; o[j + 1] = gauss() * .08; o[j + 2] = gauss() * .12; } }); },
+    rings() { const radii = [.28, .52, .76, 1.0, 1.24], tot = radii.reduce((a, b) => a + b); return fill((i, o, j) => { let u = r1[i] * tot, k = 0; while (u > radii[k] && k < 4) { u -= radii[k]; k++; } const r = radii[k] + gauss() * .01, a = r2[i] * 6.2832; o[j] = Math.cos(a) * r; o[j + 2] = Math.sin(a) * r; o[j + 1] = gauss() * .012 + (k - 2) * .03; }); },
+    grid() {
+      const h = .62, gv = [-h, -h / 2, 0, h / 2, h], lines = [];
+      for (let ax = 0; ax < 3; ax++) for (const u of gv) for (const v of gv) {
+        const eu = Math.abs(u) === h, ev = Math.abs(v) === h;
+        if (!eu && !ev) continue;
+        for (let w = 0; w < (eu && ev ? 4 : 1); w++) lines.push([ax, u, v]);
+      }
+      return fill((i, o, j) => {
+        const [ax, u, v] = lines[r1[i] * lines.length | 0], t = (r2[i] * 2 - 1) * h, c = [0, 0, 0];
+        c[ax] = t; c[(ax + 1) % 3] = u; c[(ax + 2) % 3] = v;
+        o[j] = c[0] + gauss() * .004; o[j + 1] = c[1] + gauss() * .004; o[j + 2] = c[2] + gauss() * .004;
+      });
+    },
+    network() {
+      const C = 24, cs = []; for (let c = 0; c < C; c++) { cs.push([(rand() - .5) * 3.0, (rand() - .5) * 1.6, (rand() - .5) * 1.6, .025 + rand() * .07]); }
+      const nb = cs.map((a, ai) => cs.map((b, bi) => [bi, (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2]).filter(x => x[0] !== ai).sort((p, q) => p[1] - q[1]).slice(0, 2).map(x => x[0]));
+      return fill((i, o, j) => { const a = cs[i % C]; if (r1[i] < .74) { o[j] = a[0] + gauss() * a[3]; o[j + 1] = a[1] + gauss() * a[3]; o[j + 2] = a[2] + gauss() * a[3]; } else { const b = cs[nb[i % C][r2[i] < .5 ? 0 : 1]], t = r3[i]; o[j] = a[0] + (b[0] - a[0]) * t; o[j + 1] = a[1] + (b[1] - a[1]) * t; o[j + 2] = a[2] + (b[2] - a[2]) * t; } });
+    },
+    scatter() { return fill((i, o, j) => { o[j] = (r1[i] - .5) * 4.6; o[j + 1] = (r2[i] - .5) * 2.4; o[j + 2] = (r3[i] - .5) * 2.2; }); },
+  };
+  const DYN = {
+    stream(t, o) { for (let i = 0, j = 0; i < N; i++, j += 3) { const k = i % 9; const u = (r1[i] + t * .022 * (1 + k * .06)) % 1; const x = u * 4.8 - 2.4; if (o[j] - x > 2) jump[i] = 1; o[j] = x; o[j + 1] = (k - 4) * .075 + .22 * Math.sin(x * 1.3 + t * .45 + k * .55) + (r2[i] - .5) * .05; o[j + 2] = .45 * Math.cos(x * .8 + k * .7 + t * .2) + (r3[i] - .5) * .05; } },
+    wave(t, o) { const gx = 100; for (let i = 0, j = 0; i < N; i++, j += 3) { const a = i % gx, b = i / gx | 0; const x = (a / (gx - 1) - .5) * 4.6, z = (b / (N / gx - 1) - .5) * 2.6; o[j] = x; o[j + 2] = z; o[j + 1] = .13 * Math.sin(x * 1.9 + t * .9) + .1 * Math.cos(z * 2.6 + t * .7) + .05 * Math.sin((x + z) * 3 - t * 1.3); } },
+    helix(t, o) { for (let i = 0, j = 0; i < N; i++, j += 3) { if (r1[i] < .84) { const s = i & 1, u = r2[i] * 2 - 1, a = u * 7 + s * Math.PI + t * .55, R = .34 + gauss() * .0; o[j] = u * 2.3; o[j + 1] = Math.cos(a) * R + (r3[i] - .5) * .04; o[j + 2] = Math.sin(a) * R + (r3[i] - .5) * .04; } else { const ru = ((r2[i] * 46 | 0) / 46) * 2 - 1, a = ru * 7 + t * .55, v = r3[i] * 2 - 1; o[j] = ru * 2.3; o[j + 1] = Math.cos(a) * .34 * v; o[j + 2] = Math.sin(a) * .34 * v; } } },
+  };
+  const DEF = {
+    text: { spin: 0, sway: .28, tilt: 0 },
+    sphere: { spin: .1, tilt: .3 }, galaxy: { spin: .07, tilt: 1.05 }, rings: { spin: .09, tilt: 1.15 },
+    grid: { spin: .13, tilt: .5 }, network: { spin: .04, tilt: .15 }, scatter: { spin: .012, tilt: 0 },
+    stream: { spin: 0, sway: .12, tilt: .12 }, wave: { spin: 0, sway: .14, tilt: .5 }, helix: { spin: 0, sway: .22, tilt: .25 },
+  };
+  const cache = {};
+  const st = { cx: 0, cy: 0, tcx: 0, tcy: 0, sc: 1, tsc: 1, al: 0, tal: .75, rotY: 0, rotX: 0, spin: 0, sway: 0, tilt: 0, dyn: null };
+
+  function set(spec) {
+    const [head, ...kv] = spec.split('|'); const o = {};
+    kv.forEach(p => { const [k, v] = p.split('='); o[k] = parseFloat(v); });
+    const [type, arg] = head.split(':');
+    const d = DEF[type] || DEF.scatter;
+    st.spin = o.spin ?? d.spin; st.sway = o.sway ?? d.sway ?? 0; st.tilt = o.tilt ?? d.tilt;
+    st.tcx = o.x ?? 0; st.tcy = o.y ?? 0; st.tsc = o.s ?? 1; st.tal = o.a ?? .8;
+    if (DYN[type]) { st.dyn = DYN[type]; }
+    else { st.dyn = null; const key = head; if (!cache[key]) cache[key] = type === 'text' ? G.text(arg) : G[type](); tgt.set(cache[key]); }
+    for (let i = 0; i < N * 3; i++) vel[i] += (rand() - .5) * .05;
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, .05); last = now; const t = now / 1000;
+    if (st.dyn) st.dyn(t, tgt);
+    for (let i = 0, j = 0; i < N; i++, j += 3) {
+      if (jump[i]) { jump[i] = 0; pos[j] = tgt[j]; pos[j + 1] = tgt[j + 1]; pos[j + 2] = tgt[j + 2]; vel[j] = vel[j + 1] = vel[j + 2] = 0; continue; }
+      const k = stiff[i];
+      let v = vel[j] * .885 + (tgt[j] - pos[j]) * k; vel[j] = v; pos[j] += v;
+      v = vel[j + 1] * .885 + (tgt[j + 1] - pos[j + 1]) * k; vel[j + 1] = v; pos[j + 1] += v;
+      v = vel[j + 2] * .885 + (tgt[j + 2] - pos[j + 2]) * k; vel[j + 2] = v; pos[j + 2] += v;
+    }
+    const e = .035;
+    st.cx += (st.tcx * aspect - st.cx) * e; st.cy += (st.tcy - st.cy) * e; st.sc += (st.tsc - st.sc) * e; st.al += (st.tal - st.al) * .03;
+    if (st.spin) st.rotY += st.spin * dt; else { const home = Math.round(st.rotY / 6.2832) * 6.2832; st.rotY += (home - st.rotY) * .03; }
+    st.rotX += (st.tilt - st.rotX) * .03;
+    smx += (mx - smx) * .04; smy += (my - smy) * .04;
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bPos); gl.bufferSubData(gl.ARRAY_BUFFER, 0, pos);
+    gl.uniform1f(U.uTime, t); gl.uniform1f(U.uAspect, aspect);
+    gl.uniform1f(U.uRotY, st.rotY + Math.sin(t * .23) * st.sway + smx * .5);
+    gl.uniform1f(U.uRotX, st.rotX + smy * .3);
+    gl.uniform1f(U.uScale, st.sc * Math.min(1, aspect / 1.7)); gl.uniform1f(U.uSize, 4.2 * dpr * Math.min(innerHeight / 1000, 1.4)); gl.uniform1f(U.uAlpha, st.al);
+    gl.uniform2f(U.uCenter, st.cx, st.cy);
+    gl.drawArrays(gl.POINTS, 0, N);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  return { set };
+})();
+
+/* ================= deck ================= */
+const stage = $('#stage');
+const slides = $$('.slide');
+const fit = () => { const s = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = `translate(-50%,-50%) scale(${s})`; };
+addEventListener('resize', fit); fit();
+addEventListener('hashchange', () => { const n = parseInt(location.hash.slice(1), 10) - 1; if (n >= 0 && n < slides.length && n !== cur) show(n, location.hash.endsWith('!') ? slides[n]._max : 0, n > cur ? 1 : -1); });
+
+// split headings into animated characters
+function splitEl(el) {
+  let i = 0;
+  const walk = node => {
+    [...node.childNodes].forEach(ch => {
+      if (ch.nodeType === 3) {
+        const frag = document.createDocumentFragment();
+        ch.textContent.split(/(\s+)/).forEach(part => {
+          if (!part) return;
+          if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(' ')); return; }
+          const w = document.createElement('span'); w.className = 'w';
+          [...part].forEach(c => { const s = document.createElement('span'); s.className = 'c'; s.textContent = c; s.style.setProperty('--i', i++); w.appendChild(s); });
+          frag.appendChild(w);
+        });
+        ch.replaceWith(frag);
+      } else if (ch.nodeType === 1 && !ch.classList.contains('glitch')) walk(ch);
+      else if (ch.nodeType === 1) { const w = document.createElement('span'); w.className = 'w'; const s = document.createElement('span'); s.className = 'c'; s.style.setProperty('--i', i++); ch.replaceWith(w); w.appendChild(s); s.appendChild(ch); }
+    });
+  };
+  walk(el);
+}
+$$('.split').forEach(splitEl);
+$$('.st').forEach(li => { const w = document.createElement('span'); w.append(...li.childNodes); li.append(w); });
+
+slides.forEach(s => {
+  const max = s.dataset.builds ? +s.dataset.builds : Math.max(0, ...$$('[data-b]', s).map(e => +e.dataset.b));
+  s._max = max;
+});
+
+let cur = -1, build = 0;
+
+function setBuild(s, b) {
+  $$('[data-b]', s).forEach(e => e.classList.toggle('on', +e.dataset.b <= b));
+  $$('[data-at]', s).forEach(e => { const a = +e.dataset.at; e.classList.toggle('cur', a === b); e.classList.toggle('done', a < b); });
+  $$('[data-hl]', s).forEach(e => e.classList.toggle('hl', +e.dataset.hl === b));
+  for (let k = 1; k <= Math.max(s._max, 1); k++) s.classList.toggle('b-' + k, k <= b);
+}
+
+/* ================= Cue player protocol (cue/1) ================= */
+const EMBED = window.parent !== window;
+const cuePost = m => { if (EMBED) parent.postMessage(Object.assign({ cue: 1 }, m), location.origin === 'null' ? '*' : location.origin); };
+const cueReady = () => cuePost({ type: 'ready', title: document.title, slides: slides.map(s => ({ id: s.dataset.id, title: s.dataset.title, builds: s._max })) });
+const cueState = () => { if (cur < 0) return; const s = slides[cur]; cuePost({ type: 'state', index: cur, id: s.dataset.id, build, builds: s._max, total: slides.length }); };
+addEventListener('message', e => {
+  const d = e.data;
+  if (e.source !== parent || !d || d.cue !== 1) return;
+  if (d.type === 'hello') { cueReady(); cueState(); }
+  else if (d.type === 'next') step(1);
+  else if (d.type === 'prev') step(-1);
+  else if (d.type === 'goto') { const i = Math.max(0, Math.min(slides.length - 1, d.index | 0)); show(i, Math.min(d.build | 0, slides[i]._max), i >= cur ? 1 : -1); }
+});
+
+function hud() {
+  const s = slides[cur];
+  $('#cnt').textContent = String(cur + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+  $('#prog').style.width = ((cur + (s._max ? build / (s._max + 1) : 0)) / (slides.length - 1) * 100) + '%';
+  const dots = $('#dots'); dots.innerHTML = '';
+  for (let k = 1; k <= s._max; k++) { const i = document.createElement('i'); if (k <= build) i.className = 'on'; dots.appendChild(i); }
+  const sec = +s.dataset.sec, name = SECTIONS[sec];
+  document.body.dataset.sec = sec;
+  const el = $('#secName');
+  if (el.textContent !== name) { el.classList.add('swap'); setTimeout(() => { el.textContent = name; $('#secNum').textContent = String(sec).padStart(2, '0'); el.classList.remove('swap'); }, 350); }
+  history.replaceState(null, '', '#' + (cur + 1));
+  cueState();
+}
+
+function show(i, b, dir) {
+  if (i < 0 || i >= slides.length) return;
+  const prev = slides[cur];
+  if (prev && i !== cur) {
+    const h = HOOKS[prev.dataset.hook]; if (h && h.leave) h.leave(prev); prev._run = null;
+    prev.classList.remove('active');
+    prev.classList.add(dir > 0 ? 'out-fwd' : 'out-back');
+    setTimeout(() => prev.classList.remove('out-fwd', 'out-back'), 800);
+  }
+  cur = i; build = b;
+  const s = slides[cur];
+  setBuild(s, b);
+  s.classList.remove('out-fwd', 'out-back');
+  void s.offsetWidth;
+  s.classList.add('active');
+  FX.set(s.dataset.fx || 'scatter');
+  const h = HOOKS[s.dataset.hook];
+  if (h) { s._run = {}; h.enter ? h.enter(s, b, dir >= 0) : h.build && h.build(s, b, dir >= 0); }
+  hud();
+}
+function step(d) {
+  const s = slides[cur];
+  if (d > 0) {
+    if (build < s._max) { build++; setBuild(s, build); const h = HOOKS[s.dataset.hook]; if (h && h.build) { s._run = {}; h.build(s, build, true); } hud(); }
+    else show(cur + 1, 0, 1);
+  } else {
+    if (build > 0) { build--; setBuild(s, build); const h = HOOKS[s.dataset.hook]; if (h && h.build) { s._run = {}; h.build(s, build, false); } hud(); }
+    else if (cur > 0) show(cur - 1, slides[cur - 1]._max, -1);
+  }
+}
+
+/* ================= helpers for scripted slides ================= */
+const alive = (s, run) => s._run === run && s.classList.contains('active');
+async function typeText(el, text, s, run, cps = 45, chunk = 1) {
+  el.textContent = '';
+  for (let k = 0; k < text.length; k += chunk) {
+    if (!alive(s, run)) return false;
+    el.textContent = text.slice(0, k + chunk);
+    await sleep(1000 / cps);
+  }
+  el.textContent = text; return true;
+}
+function relPos(el, root) { let x = 0, y = 0, n = el; while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; } return { x, y }; }
+async function cursorTo(m, el, s, run) {
+  const c = $('.cursor', m), p = relPos(el, m);
+  c.classList.add('show');
+  c.style.left = (p.x + Math.min(el.offsetWidth * .5, 160)) + 'px'; c.style.top = (p.y + el.offsetHeight * .55) + 'px';
+  await sleep(950); if (!alive(s, run)) return false;
+  c.classList.remove('click'); void c.offsetWidth; c.classList.add('click');
+  await sleep(220); return alive(s, run);
+}
+// stepper: steps[k] = { reset?, final(m), anim?(m,s,run) } ; applies state for build b
+function stepper(rootSel, steps, reset) {
+  return {
+    build(s, b, animate) {
+      const m = $(rootSel, s), run = s._run;
+      reset(m);
+      for (let k = 0; k < b && k < steps.length; k++) steps[k] && steps[k].final(m);
+      const st = steps[b];
+      if (!st) return;
+      if (animate && st.anim) st.anim(m, s, run); else st.final(m);
+    },
+  };
+}
+
+// Slide hooks: add data-hook="name" to a slide to script it.
+//   HOOKS.name = { enter(slide, build, forward) {...}, build(slide, build, forward) {...} }
+// enter runs when the slide opens; build runs on every click. When forward is false (going back
+// or jumping), render that build's final state instantly. stepper() above does that for you.
+const HOOKS = {};
+
+/* ================= input ================= */
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key;
+  if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) { e.preventDefault(); e.shiftKey ? show(cur + 1, 0, 1) : step(1); }
+  else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); e.shiftKey ? show(cur - 1, 0, -1) : step(-1); }
+  else if (k === 'Home') show(0, 0, -1);
+  else if (k === 'End') show(slides.length - 1, 0, 1);
+  else if ((k === 'f' || k === 'F') && !EMBED) { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); }
+  else { if (EMBED) cuePost({ type: 'key', key: k }); return; }
+  $('#hint').classList.add('gone');
+});
+let tx = null;
+addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1); tx = null; });
+let idleT; addEventListener('mousemove', () => { document.body.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => document.body.classList.add('idle'), 2500); });
+
+/* ================= start ================= */
+const start = Math.min(Math.max((parseInt(location.hash.slice(1), 10) || 1) - 1, 0), slides.length - 1);
+(document.fonts ? Promise.race([document.fonts.ready, sleep(1500)]) : Promise.resolve()).then(() => {
+  show(start, location.hash.endsWith('!') ? slides[start]._max : 0, 1);
+  cueReady(); cueState();
+  if (EMBED) $('#hint').style.display = 'none';
+  setTimeout(() => $('#hint').classList.add('gone'), 7000);
+});
+})();
+</script>
+</body>
+</html>

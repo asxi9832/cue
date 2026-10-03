@@ -84,7 +84,11 @@ The gate lives in `functions/_middleware.js` and runs on Cloudflare before any f
 
 ## 6. Optional: a custom domain
 
-Pages project → **Custom domains**, for example `present.rook.ltd`. Then add that hostname to both Access applications, keeping `remote` as the bypass path.
+Pages project → **Custom domains**, for example `present.example.com`.
+
+> **Add the hostname to both Access applications first:** `Cue` with no path, and `Cue remote` with path `remote`. Until it is listed in Access, the new hostname serves everything with **no login**. If it was public for any time, rotate `CUE_LOBBY_KEY` afterwards.
+
+If your DNS is somewhere else (Hover, GoDaddy and so on), add a **CNAME** record: the subdomain (for example `present`) pointing to `<project>.pages.dev`. Cloudflare activates it within about 30 minutes.
 
 ## Install as an app
 
