@@ -13,7 +13,7 @@ Phone remote  ◄──── Supabase Realtime (broadcast) ────►  Scr
 1. Create a project at supabase.com. Any region near you works. Save the database password somewhere safe; Cue does not use it.
 2. Go to **Project Settings → API** and copy the **Project URL** and the **anon public** key. The anon key is designed to sit in web pages, so it is safe to share.
 3. The remote needs no tables; it uses Realtime broadcast, which is on by default.
-4. **For audience participation** (polls, word clouds, Q&A, contacts): go to **SQL Editor → New query**, paste `supabase/schema.sql`, and click **Run**. All access goes through database functions; phones can never read contacts back. Free projects handle about 200 people connected at once; the Pro plan raises that.
+4. **For audience participation** (polls, word clouds, Q&A, contacts): go to **SQL Editor → New query**, paste `supabase/schema.sql`, and click **Run**. **Run it again after updating Cue**: it is safe to re-run and adds anything new. All access goes through database functions; phones can never read contacts back. Free projects handle about 200 people connected at once; the Pro plan raises that.
 
 > **Free projects pause after about a week without activity.** The `keepalive` workflow in this repository pings the project weekly. Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as GitHub Actions secrets on the cue repository to turn it on. If the project does pause, the remote stops working but decks still play. Un-pause it from the Supabase dashboard.
 

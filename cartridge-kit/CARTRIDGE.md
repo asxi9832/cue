@@ -99,6 +99,7 @@ Rules:
 - Contact data needs consent: keep the boxes unchecked by default, keep text messaging consent separate, and link a privacy notice when the deck is public-facing.
 - The rendering code (QR, wall, cloud, poll bars, Q&A and floating reactions) is the "audience kit" in the brand template's engine and in `ai-zero-to-sixty`. Copy it from there.
 - After the talk, press **Q** on the screen and choose **Export contacts**, which saves a CSV of contacts and a JSON report.
+- Running a deck again: reopening it asks whether to continue, clear results (everyone stays joined), or start a new audience with a new code. The same controls are under **Q** on the screen and **More** on the remote. A page reload always resumes silently. Contacts are never deleted by a reset.
 
 ## 6. notes.md
 

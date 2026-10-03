@@ -102,6 +102,7 @@ function exec(cmd, m = {}) {
     case 'rehearse': m.action === 'stop' ? stopRehearsal() : startRehearsal(); break;
     case 'resync': sendDeck(); sendState(); sendAud(); break;
     case 'qa': hostQuestion(m.action, m.id, m.value); break;
+    case 'aud': if (m.action === 'clear' || m.action === 'new') audienceReset(m.action === 'new'); break;
   }
 }
 
@@ -166,7 +167,7 @@ addEventListener('message', e => {
 /* ---------------- audience participation ---------------- */
 // One event per deck per browser session. Phones join on a separate public channel (cue-aud:<code>),
 // never the presenter channel. Phone messages are only hints to refresh; the database is the truth.
-const AUD = { auto: true, code: null, key: null, ch: null, deck: null, step: null, wall: { count: 0, recent: [] }, results: {}, qs: { featured: null, items: [] }, host: { featured: null, items: [] }, timer: null, needs: new Set(), poll: null, reacts: [] };
+const AUD = { round: 1, auto: true, code: null, key: null, ch: null, deck: null, step: null, wall: { count: 0, recent: [] }, results: {}, qs: { featured: null, items: [] }, host: { featured: null, items: [] }, timer: null, needs: new Set(), poll: null, reacts: [] };
 const audUrl = () => AUD.code ? `${CFG.remoteBase || location.origin}/j/#${AUD.code}` : ''; // trailing slash: no redirect hop on slow networks
 const hasAudience = () => HAS_RELAY && S.slides.some(s => s.interact);
 
@@ -177,12 +178,17 @@ async function audienceStart() {
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem(keyName) || 'null'); } catch { }
   try {
-    if (saved) { Object.assign(AUD, saved); await rpc(CFG, 'cue_wall', { p_code: AUD.code }); }
+    if (saved) { Object.assign(AUD, saved); AUD.wall = await rpc(CFG, 'cue_wall', { p_code: AUD.code }); AUD.round = AUD.wall.round || 1; }
   } catch { saved = null; }
+  // A page reload resumes silently (never lose a live session). Reopening the deck asks first.
+  const nav = performance.getEntriesByType('navigation')[0];
+  const resumedByReload = nav && nav.type === 'reload' && !window.__cueAudOpened;
+  window.__cueAudOpened = true;
+  if (saved && !resumedByReload) setTimeout(() => audienceChoice(), 600);
   if (!saved) {
     try {
       const r = await rpc(CFG, 'cue_host_start', { p_deck: S.cart.id, p_title: S.cart.title, p_filter: !(S.cart.audience && S.cart.audience.filter === false) });
-      Object.assign(AUD, { code: r.code, key: r.host_key });
+      Object.assign(AUD, { code: r.code, key: r.host_key, round: r.round || 1 });
       sessionStorage.setItem(keyName, JSON.stringify({ code: AUD.code, key: AUD.key }));
       const past = JSON.parse(localStorage.getItem('cue:events') || '[]');
       past.unshift({ code: AUD.code, key: AUD.key, deck: S.cart.id, title: S.cart.title, at: Date.now() });
@@ -226,7 +232,7 @@ async function refresh() {
   const code = AUD.code;
   try {
     await Promise.all(needs.map(async n => {
-      if (n === 'wall') AUD.wall = await rpc(CFG, 'cue_wall', { p_code: code });
+      if (n === 'wall') { AUD.wall = await rpc(CFG, 'cue_wall', { p_code: code }); if (AUD.wall.round && AUD.wall.round !== AUD.round) { AUD.round = AUD.wall.round; AUD.results = {}; toDeck({ type: 'aud-reset' }); } }
       else if (n === 'qs') {
         AUD.qs = await rpc(CFG, 'cue_questions_public', { p_code: code });
         AUD.host = await rpc(CFG, 'cue_host_questions', { p_code: code, p_key: AUD.key });
@@ -256,7 +262,7 @@ function pushStage() {
   const st = AUD.step ? { ...AUD.step } : null;
   if (st && st.type === 'poll') st.results = st.state === 'reveal' ? pollCounts(st.id, st.options.length) : null;
   AUD.ch.send({
-    t: 'stage', title: S.cart.title, theme: { accent: S.cart.accent, background: S.cart.background },
+    t: 'stage', round: AUD.round, title: S.cart.title, theme: { accent: S.cart.accent, background: S.cart.background },
     qa: S.slides.some(s => s.interact && s.interact.type === 'qa'), step: st,
     words: st && st.type === 'words' ? ((AUD.results[st.id] || {}).words || []).slice(0, 12) : [],
     questions: AUD.qs,
@@ -279,7 +285,7 @@ function pushDeck() {
     if (it.type === 'words') results[it.id] = { kind: 'words', words: (AUD.results[it.id] || {}).words || [] };
   });
   const url = audUrl();
-  toDeck({ type: 'aud', code: AUD.code, url, short: url.replace(/^https?:\/\//, '').replace(/\/?#.*$/, ''), qr: qrData(url), wall: AUD.wall, results, questions: AUD.qs });
+  toDeck({ type: 'aud', code: AUD.code, round: AUD.round, url, short: url.replace(/^https?:\/\//, '').replace(/\/?#.*$/, ''), qr: qrData(url), wall: AUD.wall, results, questions: AUD.qs });
 }
 function sendAud() {
   send({ t: 'aud', aud: AUD.code ? { code: AUD.code, url: audUrl(), count: AUD.wall.count || 0, step: AUD.step, filter: !(S.cart && S.cart.audience && S.cart.audience.filter === false), auto: AUD.auto, questions: AUD.host } : null });
@@ -301,6 +307,43 @@ async function hostQuestion(action, id, value) {
   } catch (e) { toast('Could not update the question'); }
   need('qs');
 }
+// Start over. people=false clears votes, words and questions and keeps everyone joined.
+// people=true ends this audience and opens a new one with a new code. Contacts are never deleted.
+async function audienceReset(people) {
+  if (!AUD.code || !S.cart) return;
+  try {
+    if (people) {
+      if (AUD.ch) { AUD.ch.send({ t: 'ended' }); const ch = AUD.ch; setTimeout(() => ch.close(), 800); }
+      clearInterval(AUD.poll);
+      await rpc(CFG, 'cue_host_set', { p_code: AUD.code, p_key: AUD.key, p_end: true }).catch(() => {});
+      sessionStorage.removeItem('cue:aud:' + S.cart.id);
+      Object.assign(AUD, { ch: null, deck: null, code: null, key: null, round: 1, step: null, results: {}, wall: { count: 0, recent: [] }, qs: { featured: null, items: [] }, host: { featured: null, items: [] } });
+      toDeck({ type: 'aud-reset', people: true });
+      await audienceStart();
+      toast(`New audience. Code ${AUD.code}`);
+    } else {
+      const r = await rpc(CFG, 'cue_host_reset', { p_code: AUD.code, p_key: AUD.key, p_people: false });
+      Object.assign(AUD, { round: r.round, results: {}, qs: { featured: null, items: [] }, host: { featured: null, items: [] } });
+      toDeck({ type: 'aud-reset' });
+      need('wall'); need('qs'); if (AUD.step && AUD.step.id) need('r:' + AUD.step.id);
+      pushStage(); pushDeck(); sendAud();
+      toast('Results cleared. Everyone is still joined.');
+    }
+  } catch (e) { toast('Could not reset: ' + esc(e.message)); }
+}
+function audienceChoice() {
+  if (!AUD.code || !$('#modal').hidden) return;
+  const m = $('#modal');
+  m.innerHTML = `<div class="box"><h3>This deck already has an audience</h3><p>Code <span class="mono">${AUD.code}</span> &middot; ${AUD.wall.count || 0} joined. Keep going, or start over for a new run?</p>
+    <div class="acts" style="margin-top:22px;display:flex;flex-direction:column;gap:10px">
+      <button class="btn primary" data-c="keep">Continue this session</button>
+      <button class="btn" data-c="clear">Clear results, keep everyone joined</button>
+      <button class="btn" data-c="new">New audience with a new code</button></div>
+    <p style="margin-top:14px;font-size:12px;color:var(--faint)">Contacts are never deleted.</p></div>`;
+  m.hidden = false;
+  m.onclick = e => { const b = e.target.closest('[data-c]'); if (!b && e.target !== m) return; closeModal(); if (b && b.dataset.c !== 'keep') audienceReset(b.dataset.c === 'new'); };
+}
+
 async function exportAudience() {
   if (!AUD.code) return;
   const d = await rpc(CFG, 'cue_host_export', { p_code: AUD.code, p_key: AUD.key });
@@ -377,10 +420,12 @@ function openPairModal() {
   m.innerHTML = `<div class="box"><h3>Remote</h3><p>Scan to use a phone or tablet as the remote. The code is the key, so no login is needed. One device controls at a time.</p>
     <div class="pair">${p.qr}<div><ul class="devices" data-devices>${devicesHtml()}</ul>${p.code}
     <div class="acts" style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm" data-act="presenter">Presenter window here</button><button class="btn sm ghost" data-act="close">Done</button></div>
-    ${AUD.code ? `<div class="aud-info"><b>Audience</b> &middot; code <span class="mono">${AUD.code}</span> &middot; ${AUD.wall.count || 0} joined <button class="btn sm" data-act="export">Export contacts</button></div>` : ''}
+    ${AUD.code ? `<div class="aud-info"><b>Audience</b> &middot; code <span class="mono">${AUD.code}</span> &middot; ${AUD.wall.count || 0} joined <button class="btn sm" data-act="export">Export contacts</button><button class="btn sm" data-act="aud-clear">Clear results</button><button class="btn sm" data-act="aud-new">New audience</button></div>` : ''}
     <div class="keys"><kbd>B</kbd><span>Blackout</span><kbd>P</kbd><span>Presenter window</span><kbd>F</kbd><span>Full screen</span><kbd>Q</kbd><span>This panel</span></div></div></div></div>`;
   m.hidden = false;
-  m.onclick = e => { if (e.target === m || e.target.closest('[data-act="close"]')) closeModal(); if (e.target.closest('[data-act="presenter"]')) openPresenter(); if (e.target.closest('[data-act="export"]')) exportAudience().catch(() => toast('Export failed')); };
+  m.onclick = e => { if (e.target === m || e.target.closest('[data-act="close"]')) closeModal(); if (e.target.closest('[data-act="presenter"]')) openPresenter(); if (e.target.closest('[data-act="export"]')) exportAudience().catch(() => toast('Export failed'));
+    const ra = e.target.closest('[data-act="aud-clear"],[data-act="aud-new"]');
+    if (ra) { if (ra.dataset.armed) { closeModal(); audienceReset(ra.dataset.act === 'aud-new'); } else { ra.dataset.armed = 1; ra.textContent = 'Tap again to confirm'; } } };
   paintStatus();
 }
 function closeModal() { const m = $('#modal'); m.hidden = true; m.innerHTML = ''; if (frame) frame.focus(); }

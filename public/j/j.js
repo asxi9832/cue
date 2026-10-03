@@ -14,7 +14,9 @@ const EMOJI = ['🦊', '🐼', '🦁', '🐙', '🦉', '🐝', '🦄', '🐢', '
 let cid = localStorage.getItem('cue:cid');
 if (!cid) { cid = randomId(20); localStorage.setItem('cue:cid', cid); }
 let code = (location.hash.slice(1).match(/[A-Za-z0-9]{6}/) || [''])[0].toUpperCase();
-const store = k => `cue:aud:${code}:${k}`;
+let round = 1;
+// Per-round memory (my vote, my words, my upvotes); the join itself lives across rounds.
+const store = k => k === 'me' ? `cue:aud:${code}:me` : `cue:aud:${code}:r${round}:${k}`;
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(store(k))) ?? d; } catch { return d; } };
 const save = (k, v) => localStorage.setItem(store(k), JSON.stringify(v));
 
@@ -262,8 +264,11 @@ $('#react').onclick = e => {
 
 /* ---------------- start ---------------- */
 function onMessage(m) {
-  if (!m || m.cid || m.t !== 'stage') return; // ignore other phones
+  if (!m || m.cid) return; // ignore other phones
+  if (m.t === 'ended') { $('#react').hidden = true; view.innerHTML = `<div class="hello"><div class="em">🔄</div><h2>New session started.</h2><p class="sub">Scan the new code on the screen to join again.</p></div>`; stage = null; return; }
+  if (m.t !== 'stage') return;
   const first = !stage;
+  if (m.round && m.round !== round) { const fresh = !first; round = m.round; if (fresh && me) { lastKey = ''; toast('Fresh start: votes and words cleared'); } }
   stage = m; theme(m.theme);
   if (me) { if (first) connected(); else { $('#title').textContent = m.title || ''; render(); } }
   else if (view.dataset.v === 'join') { const jt = $('#jt'); if (jt && m.title) jt.textContent = m.title; }

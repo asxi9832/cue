@@ -183,6 +183,7 @@ function showMore() {
     <div class="row"><span>Notes text size</span><div class="seg"><button data-p="smaller">A&minus;</button><button data-p="bigger">A+</button></div></div>
     ${!isCtl ? '<div class="row"><span>Control</span><button class="tgl" data-p="take">Take control</button></div>' : '<div class="row"><span>Control</span><span style="color:var(--go)">This device</span></div>'}
     <div class="row"><span>Sync</span><button class="tgl" data-p="resync">Resync with screen</button></div>
+    ${aud ? `<div class="row"><span>Audience &middot; ${aud.count} joined<br><small style="color:var(--faint)">Contacts are never deleted</small></span><div class="seg"><button data-p="aud-clear">Clear results</button><button data-p="aud-new">New audience</button></div></div>` : ''}
     <div class="row danger"><span>${esc(name)}</span><button class="tgl" data-p="leave">Leave session</button></div>
     <p class="lic">Cue is free software under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">AGPL-3.0</a>. <a href="https://github.com/asxi9832/cue" target="_blank" rel="noopener">Source code</a></p>`);
   $('#sheetBody').onclick = e => {
@@ -193,6 +194,10 @@ function showMore() {
     else if (k === 'smaller') { prefs.size = Math.max(14, cur - 2); savePrefs(); applyPrefs(); }
     else if (k === 'bigger') { prefs.size = Math.min(34, cur + 2); savePrefs(); applyPrefs(); }
     else if (k === 'take') { send({ t: 'take' }); closeSheet(); }
+    else if (k === 'aud-clear' || k === 'aud-new') {
+      if (!p.dataset.armed) { p.dataset.armed = 1; p.textContent = 'Tap to confirm'; return; }
+      send({ t: 'cmd', cmd: 'aud', action: k === 'aud-new' ? 'new' : 'clear' }); closeSheet();
+    }
     else if (k === 'resync') { send({ t: 'cmd', cmd: 'resync' }); hello(); closeSheet(); }
     else if (k === 'leave') { send({ t: 'bye' }); ended = true; closeSheet(); gate('Left the session', 'Scan the QR code again to rejoin.'); }
   };

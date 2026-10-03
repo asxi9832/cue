@@ -90,6 +90,9 @@ create table if not exists cue_contacts (
 
 create table if not exists cue_blocklist (term text primary key);
 
+-- Added after the first release; safe on existing databases.
+alter table cue_events add column if not exists round int not null default 1; -- bumps when the presenter clears results
+
 do $$ declare t text; begin
   foreach t in array array['cue_events','cue_attendees','cue_votes','cue_words','cue_questions','cue_question_votes','cue_contacts','cue_blocklist'] loop
     execute format('alter table %I enable row level security', t);
@@ -159,7 +162,7 @@ begin
   end loop;
   insert into cue_events (code, host_hash, deck, title, filter)
   values (c, encode(digest(k, 'sha256'), 'hex'), left(trim(p_deck), 80), left(coalesce(p_title, ''), 200), coalesce(p_filter, true));
-  return json_build_object('code', c, 'host_key', k);
+  return json_build_object('code', c, 'host_key', k, 'round', 1);
 end $$;
 
 create or replace function cue_host_set(p_code text, p_key text, p_filter boolean default null, p_auto boolean default null, p_end boolean default false)
@@ -197,6 +200,19 @@ begin
   elsif p_feature is false then update cue_events set featured = null where id = e.id and featured = p_id;
   end if;
   return json_build_object('ok', true);
+end $$;
+
+-- Start over: clear votes, words and questions (and optionally who joined). Contacts are never deleted here.
+create or replace function cue_host_reset(p_code text, p_key text, p_people boolean default false)
+returns json language plpgsql volatile security definer set search_path = public, extensions as $$
+declare e cue_events := cue_host(p_code, p_key); r int;
+begin
+  delete from cue_votes where event_id = e.id;
+  delete from cue_words where event_id = e.id;
+  delete from cue_questions where event_id = e.id;
+  if p_people then delete from cue_attendees where event_id = e.id; end if;
+  update cue_events set round = round + 1, featured = null where id = e.id returning round into r;
+  return json_build_object('round', r);
 end $$;
 
 -- Everything for one event, for the post-event report and CSV export.
@@ -314,6 +330,7 @@ declare e cue_events := cue_live(p_code);
 begin
   return json_build_object(
     'title', e.title,
+    'round', e.round,
     'count', (select count(*) from cue_attendees where event_id = e.id),
     'recent', coalesce((select json_agg(x) from (
       select case when flagged then 'Guest' else name end as name, emoji from cue_attendees
@@ -354,7 +371,7 @@ do $$ declare f text; begin
   -- the API
   foreach f in array array[
     'cue_host_start(text,text,boolean)', 'cue_host_set(text,text,boolean,boolean,boolean)', 'cue_host_questions(text,text)',
-    'cue_host_question(text,text,uuid,text,boolean)', 'cue_host_export(text,text)',
+    'cue_host_question(text,text,uuid,text,boolean)', 'cue_host_export(text,text)', 'cue_host_reset(text,text,boolean)',
     'cue_join(text,text,text,text)', 'cue_vote(text,text,text,int)', 'cue_add_words(text,text,text,text[],int)',
     'cue_ask(text,text,text)', 'cue_upvote(text,text,uuid)',
     'cue_follow_up(text,text,text,text,text,boolean,boolean,text)',
