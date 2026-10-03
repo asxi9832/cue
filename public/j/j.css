@@ -9,7 +9,9 @@
 [hidden]{display:none!important}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;transition:background .6s}
 body{overflow:hidden;overscroll-behavior:none}
-button,input{font:inherit;color:inherit}
+button,input,textarea,select{font:inherit;color:inherit}
+.field{color:var(--text);-webkit-text-fill-color:var(--text);caret-color:var(--acc)}
+.field::placeholder{color:var(--faint);-webkit-text-fill-color:var(--faint)}
 button{background:none;border:0;cursor:pointer}
 
 .bg{position:fixed;inset:0;overflow:hidden;pointer-events:none}
