@@ -26,6 +26,13 @@ Then open http://localhost:8787 and play the Hello World cartridge.
 - **Phone or tablet remote:** large tap areas, notes that follow each click, slide jump list, timer against target length, blackout, wake lock, and haptics. The screen is the source of truth, so remotes rejoin cleanly after a drop or a reload. One device controls at a time; others view, and can take control.
 - **Presenter window** on the same computer (press **P**). It works with no internet.
 - **Rehearsal mode** records time per slide and keeps the last five runs.
+- **Audience participation (opt-in per deck):**
+  - QR join with a name and an emoji, and a live wall of who has joined
+  - live word clouds with automatic filtering, polls with a reveal, and floating emoji reactions
+  - Q&A with upvotes, run from the presenter's remote
+  - a consent-based follow-up offer, with CSV export afterward
+  
+  Runs on Supabase Postgres (`supabase/schema.sql`).
 - **Installable app** with offline playback of any deck you have opened.
 - **Keyboard and clickers:** arrows, Page Up and Page Down, **B** or **.** for blackout, **F** for full screen, **Q** to pair.
 
@@ -69,7 +76,11 @@ Read [cartridge-kit/CARTRIDGE.md](cartridge-kit/CARTRIDGE.md). Point an agent at
 ## Roadmap
 
 - Laser pointer: drag on the phone to show a dot on screen.
-- Audience QR code: follow along, live polls, and questions, on the same relay.
+- Audience: a "where do you stand" scale, asked at the start and again at the end, to show how the room shifted.
+- Audience: a quiz with a leaderboard, using the names and emojis.
+- Post-event report: attendance, engagement per slide, poll results and leads, sent after the talk.
+- Contacts sync to a CRM (Pipedrive first).
+- The audience kit in the Hello World starter.
 - Thumbnails of the current and next slide on the remote.
 
 ## License

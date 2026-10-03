@@ -35,6 +35,7 @@ What gets published: everything in the folder except dotfiles, `src/`, `node_mod
 | `duration` | no | Target length in minutes. The remote timer shows it and turns red past it. |
 | `accent`, `background` | no | Hex colors for the library card. Use the deck's own palette. |
 | `tags` | no | Array of strings. |
+| `audience` | no | `{ "filter": false }` turns off automatic moderation of audience text. On by default. |
 
 Start from `cartridge-kit/template/` and copy the whole folder. If the slides repository has a brand template under `templates/<brand>/`, start from that instead; it carries the brand system and a layout library.
 
@@ -61,13 +62,44 @@ All messages are `postMessage` objects carrying `cue: 1`, between the deck and i
 | Player → deck | `hello` | | Announce yourself and your state. |
 | Player → deck | `next` / `prev` | | Same as the arrow keys. |
 | Player → deck | `goto` | `index`, `build` | Jump to a slide by index, at a build. |
-| Deck → player | `ready` | `title`, `slides: [{ id, title, builds }]` | Sent on load and on `hello`. |
+| Deck → player | `ready` | `title`, `slides: [{ id, title, builds, interact? }]` | Sent on load and on `hello`. `interact` is the slide's `data-interact` JSON, if it has one. |
 | Deck → player | `state` | `index`, `id`, `build`, `builds`, `total` | Sent after every change. |
+| Player → deck | `aud` | `code`, `url`, `short`, `qr: { n, cells, svg }`, `wall`, `results`, `questions` | Live audience data, only for decks with interactions. |
+| Player → deck | `aud-react` | `e` | One emoji reaction to float across the screen. |
 | Deck → player | `key` | `key` | A key the deck does not use. The player handles B for blackout, P for the presenter window, Q for pairing, and F for full screen. |
 
 The player, not the deck, owns blackout, timers, rehearsal and remotes. Do not build those into a deck.
 
-## 5. notes.md
+## 5. Audience participation (opt-in)
+
+A cartridge can let the audience take part from their phones: join with a name and an emoji, send words to a live word cloud, vote in polls, ask and upvote questions, and leave contact details in exchange for something useful. **It is off unless the deck asks for it.** Only add it when the talk calls for participation, and ask the person first. Workshops, trainings and prospect events benefit; board updates and client reviews usually do not.
+
+A slide opts in by containing a JSON script element marked `data-interact`:
+
+```html
+<section data-id="join" data-title="Join the conversation" class="slide" data-fx="qr|x=.5|s=1.15|a=1">
+  <script type="application/json" data-interact>{"type": "join"}</script>
+  ...
+</section>
+```
+
+| type | Fields | Behavior |
+|---|---|---|
+| `join` | none | Shows the join code, address and a live wall of names. With `data-fx="qr..."`, particles form the QR code. **Recommended right after the title.** |
+| `words` | `id`, `prompt`, `max` (words per person, default 3) | Live word cloud. Duplicates merge and grow. Popular words show on phones as tap-to-add chips. Profanity is filtered automatically. |
+| `poll` | `id`, `prompt`, `options` (2 to 8), `revealAt` (build, default 1) | Phones vote; counts stay hidden until the slide reaches `revealAt`, then bars animate in. Give the slide `data-builds` of at least `revealAt`. |
+| `qa` | none | Shows the question the presenter puts on screen, plus the top-voted others. Phones can ask at any time once a deck has a `qa` slide. On this slide, the presenter's remote shows the queue ranked by upvotes, with Show, Next, Answered and Hide. |
+| `followup` | `offer`, `button`, `fields` (`email`, `phone`), `consent`, `smsConsent`, `thanks`, `privacy` (URL) | The contact trade: what people get, and opt-in boxes that start unchecked. **Tailor the offer and consent text to the talk** and say exactly what will be sent. |
+
+Rules:
+- Interaction `id`s are unique within the deck. Renaming one starts a fresh set of results.
+- In `cartridge.json`, `"audience": { "filter": false }` turns the automatic filter off, for example for a law enforcement training where words like "shoot" are legitimate. The default is on.
+- Render audience text with `textContent`, never `innerHTML`. Audience input is untrusted.
+- Contact data needs consent: keep the boxes unchecked by default, keep text messaging consent separate, and link a privacy notice when the deck is public-facing.
+- The rendering code (QR, wall, cloud, poll bars, Q&A and floating reactions) is the "audience kit" in the brand template's engine and in `ai-zero-to-sixty`. Copy it from there.
+- After the talk, press **Q** on the screen and choose **Export contacts**, which saves a CSV of contacts and a JSON report.
+
+## 6. notes.md
 
 ```markdown
 # Deck title: presenter notes
@@ -86,10 +118,10 @@ Optional intro paragraph.
 - `**Click N:**` items are special. The remote highlights the current one and labels the next one "Next click", so the presenter always knows what the next press reveals. Use them on every slide that has builds.
 - Include timing guidance on section openers, for example "Part two: 25 minutes."
 
-## 6. Workflow for an agent
+## 7. Workflow for an agent
 
 1. **Brief.** Get the audience, goal, length, brand (colors, fonts, logo files), copy rules, and any source material. Ask when something is missing; do not invent a brand.
-2. **Outline first.** Propose the slide list with IDs, titles, build counts and a one-line purpose for each. Get approval before designing.
+2. **Outline first.** Propose the slide list with IDs, titles, build counts and a one-line purpose for each. Ask whether the audience should participate (section 5); if yes, propose where the join, poll, word cloud, Q&A and follow-up slides go. Get approval before designing.
 3. **Build from a starting point.** Copy the brand template (`slides/templates/<brand>/`) if one exists, otherwise `examples/hello-world/`, or `cartridge-kit/template/` for something minimal, to `slides/<id>/`. Replace the tokens with the brand. Keep the protocol block intact.
 4. **Write notes alongside the slides,** not after. Each build gets a `**Click N:**` line.
 5. **Validate.** From the cue repository, run `node scripts/validate.mjs ../slides/<id>`. Fix every error.
@@ -97,7 +129,7 @@ Optional intro paragraph.
 7. **Check standalone.** Open `index.html` directly from disk.
 8. **Commit** to the slides repository. Pushing publishes it.
 
-## 7. Quality bar
+## 8. Quality bar
 
 The audience should feel the deck was designed, not assembled. Concretely:
 
@@ -109,7 +141,7 @@ The audience should feel the deck was designed, not assembled. Concretely:
 - **Brand and copy rules** come from the client. If they say no em dashes or contractions, apply that to slides and notes alike.
 - **Mock screens** of real products are illustrations, not copies. Use generic names like `your-name`, and never real customer data.
 
-## 8. Done checklist
+## 9. Done checklist
 
 - [ ] `validate.mjs` passes with no errors.
 - [ ] Every slide has a meaningful `data-id` and `data-title`.
@@ -118,3 +150,4 @@ The audience should feel the deck was designed, not assembled. Concretely:
 - [ ] The deck works opened from disk with no internet.
 - [ ] Text is readable at 1280 by 720.
 - [ ] Fonts are licensed for this use, or the client has accepted the risk in writing.
+- [ ] If the deck uses audience participation: the person asked for it, join comes right after the title, the follow-up offer says exactly what will be sent, and every interaction is tested with a phone.

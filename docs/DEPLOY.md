@@ -12,7 +12,8 @@ Phone remote  ◄──── Supabase Realtime (broadcast) ────►  Scr
 
 1. Create a project at supabase.com. Any region near you works. Save the database password somewhere safe; Cue does not use it.
 2. Go to **Project Settings → API** and copy the **Project URL** and the **anon public** key. The anon key is designed to sit in web pages, so it is safe to share.
-3. No tables are needed. Cue uses Realtime broadcast only, which is on by default.
+3. The remote needs no tables; it uses Realtime broadcast, which is on by default.
+4. **For audience participation** (polls, word clouds, Q&A, contacts): go to **SQL Editor → New query**, paste `supabase/schema.sql`, and click **Run**. All access goes through database functions; phones can never read contacts back. Free projects handle about 200 people connected at once; the Pro plan raises that.
 
 > **Free projects pause after about a week without activity.** The `keepalive` workflow in this repository pings the project weekly. Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as GitHub Actions secrets on the cue repository to turn it on. If the project does pause, the remote stops working but decks still play. Un-pause it from the Supabase dashboard.
 
@@ -66,14 +67,14 @@ The gate lives in `functions/_middleware.js` and runs on Cloudflare before any f
    - Name: `Cue`
    - Domain: `<project>.pages.dev` (leave the path empty)
    - Policy: **Allow**, Include → Emails → your address, plus anyone else who should present.
-4. Add a **second** self-hosted application for the phone remote:
+4. Add a **second** self-hosted application for the phone remote and the audience page:
    - Name: `Cue remote`
-   - Domain: `<project>.pages.dev`, path `remote`
+   - Domain: `<project>.pages.dev`, path `remote`, plus a second entry with the same domain and path `j` (the audience join page)
    - Policy: action **Bypass**, Include → **Everyone**
 
    The remote page holds no content. Notes travel over the session channel, and the long random session ID in the QR code is the key. The lobby key never reaches this path.
 5. In the Pages project, go to **Settings → General → Access policy** and enable it, so preview deployments are protected too.
-6. Test it in a private window: `/` should ask you to log in, and `/remote/` should load without asking.
+6. Test it in a private window: `/` should ask you to log in, while `/remote/` and `/j` should load without asking.
 7. Remove `CUE_PASSWORD` so people do not have to log in twice.
 
 ## 5. Publish on push from the slides repository
@@ -88,7 +89,7 @@ The gate lives in `functions/_middleware.js` and runs on Cloudflare before any f
 
 Pages project → **Custom domains**, for example `present.example.com`.
 
-> **Add the hostname to both Access applications first:** `Cue` with no path, and `Cue remote` with path `remote`. Until it is listed in Access, the new hostname serves everything with **no login**. If it was public for any time, rotate `CUE_LOBBY_KEY` afterwards.
+> **Add the hostname to both Access applications first:** `Cue` with no path, and `Cue remote` with paths `remote` and `j`. Until it is listed in Access, the new hostname serves everything with **no login**. If it was public for any time, rotate `CUE_LOBBY_KEY` afterwards.
 
 If your DNS is somewhere else (Hover, GoDaddy and so on), add a **CNAME** record: the subdomain (for example `present`) pointing to `<project>.pages.dev`. Cloudflare activates it within about 30 minutes.
 

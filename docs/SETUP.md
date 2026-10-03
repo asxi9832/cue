@@ -93,6 +93,18 @@ Follow `docs/DEPLOY.md` together, one section at a time, confirming each before 
   5. Mention that free Supabase projects pause after about a week idle. The `keepalive` workflow prevents that if they add the same two values as GitHub Actions secrets on their copy of cue.
 - **No:** skip it. Decks, the presenter window and keyboard or clicker control all work without a relay.
 
+## Gate D: Audience participation
+
+Ask: **"Do you want your audience to join from their phones: polls, word clouds, Q&A, and contact capture?"** It needs the relay from Gate C.
+
+- **Yes:**
+  1. They open their Supabase project, go to **SQL Editor → New query**, paste all of `supabase/schema.sql`, and click **Run**. It is safe to run again later.
+  2. **Online only:** in Cloudflare Access, edit the `Cue remote` application and add a second path, `j`, so `https://their-domain/j` opens without a login. Verify `/j` returns 200 and `/` still redirects to the login.
+  3. Explain that it is opt-in per deck: only slides they add on purpose use it (`cartridge-kit/CARTRIDGE.md` section 5).
+  4. Mention consent: contact capture uses unchecked opt-in boxes, and public-facing decks should link a privacy notice.
+  5. Free Supabase handles about 200 people connected at once. For bigger rooms, the $25 per month Pro plan raises that.
+- **No:** skip it. Nothing is created until a deck asks for it.
+
 ## Step 3: Verify
 
 **Local:**
@@ -136,7 +148,7 @@ Copy examples/hello-world to slides/hello-[name] as the starting point, give it 
 validate it, play it in Cue forward and backward, then commit and push it to my slides repository.
 ```
 
-When you build it yourself, follow `cartridge-kit/CARTRIDGE.md` section 6 (the workflow) and section 8 (the done checklist).
+When you build it yourself, follow `cartridge-kit/CARTRIDGE.md` section 7 (the workflow) and section 9 (the done checklist).
 
 For real talks after that, the person can use this longer prompt:
 

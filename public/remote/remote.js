@@ -26,6 +26,7 @@ function applyPrefs() {
 }
 applyPrefs();
 
+let aud = null;
 let relay = null, deck = null, state = null, stateAt = 0, lastHeard = 0, shownIndex = -1, helloAt = 0, ended = false, away = false;
 
 /* ---------------- connect ---------------- */
@@ -58,6 +59,7 @@ function onMessage(m) {
     paint();
   }
   else if (m.t === 'who') hello(); // the screen (re)connected and is asking who is here
+  else if (m.t === 'aud') { aud = m.aud; paintAud(); }
   else if (m.t === 'report') showReport(m.report);
   else if (m.t === 'denied' && m.rid === rid) toast('Another device is in control');
   else if (m.t === 'end') { away = true; gate('Screen disconnected', 'Waiting for it to come back. This happens when the screen reloads. If Cue was closed there, scan the new QR code.'); }
@@ -98,7 +100,8 @@ function paint() {
   $('#nextTitle').textContent = nx;
   if (shownIndex !== state.index) {
     shownIndex = state.index;
-    $('#notes').innerHTML = s.notes ? renderNotes(s.notes) : '<div class="msg">No notes for this slide.</div>';
+    $('#notes').innerHTML = '<div id="qaq"></div>' + (s.notes ? renderNotes(s.notes) : '<div class="msg">No notes for this slide.</div>');
+    paintAud();
     $('#notes').scrollTop = 0;
   }
   paintClicks();
@@ -217,3 +220,35 @@ function toast(t) {
   const el = document.createElement('div'); el.className = 'toast'; el.textContent = t;
   $('#toasts').appendChild(el); setTimeout(() => el.remove(), 2600);
 }
+
+/* ---------------- audience: count and the question queue ---------------- */
+function paintAud() {
+  const n = $('#audN');
+  n.hidden = !aud;
+  if (aud) n.textContent = `👥 ${aud.count}`;
+  const box = $('#qaq');
+  if (!box) return;
+  if (!aud || !aud.step || aud.step.type !== 'qa') { box.innerHTML = ''; box._sig = ''; return; }
+  const items = (aud.questions && aud.questions.items) || [], feat = aud.questions && aud.questions.featured;
+  const sig = feat + '|' + items.map(q => q.id + q.status + q.votes).join();
+  if (box._sig === sig && box.innerHTML) return; // redraw only on change, so taps are never lost
+  box._sig = sig;
+  const live = items.filter(q => q.status === 'approved' || q.status === 'pending');
+  const done = items.filter(q => q.status === 'answered');
+  const hidden = items.filter(q => q.status === 'hidden');
+  const row = q => `<div class="qi ${q.id === feat ? 'feat' : ''} ${q.status}"><div class="qb">${esc(q.body)}<small>${esc(q.emoji)} ${esc(q.name)} &middot; ${q.votes} vote${q.votes === 1 ? '' : 's'}${q.flagged ? ' &middot; filtered' : ''}</small></div>
+    <div class="qa-acts">${q.status === 'hidden' ? `<button data-qa="restore" data-id="${q.id}">Restore</button>`
+      : q.id === feat ? `<button data-qa="answered" data-id="${q.id}" class="pri">Done</button><button data-qa="clear" data-id="${q.id}">Off screen</button>`
+      : `<button data-qa="feature" data-id="${q.id}" class="pri">Show</button>${q.status !== 'answered' ? `<button data-qa="answered" data-id="${q.id}">Answered</button>` : ''}<button data-qa="hide" data-id="${q.id}">Hide</button>`}</div></div>`;
+  box.innerHTML = `<div class="qhead"><b>Questions</b><span>${live.length} waiting</span><button data-qa="next" class="pri">${feat ? 'Next question' : 'Show top question'}</button></div>
+    ${live.length ? live.map(row).join('') : '<p class="qempty">No questions yet. They appear here ranked by upvotes.</p>'}
+    ${done.length ? `<details><summary>Answered (${done.length})</summary>${done.map(row).join('')}</details>` : ''}
+    ${hidden.length ? `<details><summary>Hidden or filtered (${hidden.length})</summary>${hidden.map(row).join('')}</details>` : ''}`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-qa]');
+  if (!b) return;
+  e.stopPropagation();
+  send({ t: 'cmd', cmd: 'qa', action: b.dataset.qa, id: b.dataset.id || null });
+  haptic();
+}, true);

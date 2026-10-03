@@ -60,14 +60,14 @@ export function build(env = process.env) {
     list.push({
       id: manifest.id, title: manifest.title, subtitle: manifest.subtitle || '', author: manifest.author || '',
       version: manifest.version || '', duration: manifest.duration || null, accent: manifest.accent || '#ffb547',
-      background: manifest.background || '#111', tags: manifest.tags || [], slides: ids.length,
+      background: manifest.background || '#111', tags: manifest.tags || [], slides: ids.length, audience: manifest.audience || null,
       entry: `/c/${manifest.id}/${manifest.entry || 'index.html'}`, notes: `/c/${manifest.id}/notes.json`,
     });
     console.log(`  + ${manifest.id} (${ids.length} slides, ${Object.keys(notes.slides).length} notes)`);
   }
   writeFileSync(join(DIST, 'c', 'index.json'), JSON.stringify({ cartridges: list }, null, 2));
 
-  const relay = env.SUPABASE_URL && env.SUPABASE_ANON_KEY ? { url: env.SUPABASE_URL, anonKey: env.SUPABASE_ANON_KEY } : null;
+  const relay = env.SUPABASE_URL && env.SUPABASE_ANON_KEY ? { url: env.SUPABASE_URL, anonKey: env.SUPABASE_ANON_KEY, ...(env.CUE_RPC_URL ? { rpcUrl: env.CUE_RPC_URL } : {}) } : null;
   const dev = env.CUE_DEV === '1';
   // The remote config is served outside the login wall, so it never carries the lobby key.
   writeFileSync(join(DIST, 'config.js'), `window.CUE_CONFIG=${JSON.stringify({ relay, lobby: env.CUE_LOBBY_KEY || null, remoteBase: env.CUE_REMOTE_BASE || null, dev })};\n`);

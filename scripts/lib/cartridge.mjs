@@ -67,6 +67,17 @@ export function validateCartridge(dir) {
   const dupes = ids.filter((id, i) => id && ids.indexOf(id) !== i);
   if (dupes.length) errors.push('duplicate slide ids: ' + [...new Set(dupes)].join(', '));
 
+  // Audience interactions: <script type="application/json" data-interact>{...}</script> inside a slide.
+  const TYPES = { join: [], words: ['id', 'prompt'], poll: ['id', 'prompt', 'options'], qa: [], followup: [] };
+  const seen = new Set();
+  for (const m of html.matchAll(/<script[^>]*data-interact[^>]*>([\s\S]*?)<\/script>/gi)) {
+    let it;
+    try { it = JSON.parse(m[1]); } catch (e) { errors.push('data-interact block is not valid JSON: ' + m[1].trim().slice(0, 60)); continue; }
+    if (!TYPES[it.type]) { errors.push(`data-interact type "${it.type}" is not one of ${Object.keys(TYPES).join(', ')}`); continue; }
+    for (const f of TYPES[it.type]) if (!it[f]) errors.push(`${it.type} interaction is missing "${f}"`);
+    if (it.type === 'poll' && (!Array.isArray(it.options) || it.options.length < 2 || it.options.length > 8)) errors.push(`poll "${it.id}" needs 2 to 8 options`);
+    if (it.id) { if (seen.has(it.id)) errors.push(`duplicate interaction id "${it.id}"`); seen.add(it.id); }
+  }
   if (!/type:\s*['"]ready['"]/.test(html) || !/cue:\s*1/.test(html)) errors.push(`${entry} does not implement the cue/1 bridge (no "ready" message found)`);
   const ext = html.match(/(?:src|href)=["']https?:\/\/[^"']+/gi) || [];
   const extOk = ext.filter(u => !/fonts\.googleapis\.com|fonts\.gstatic\.com/.test(u));

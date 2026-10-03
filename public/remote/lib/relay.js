@@ -12,13 +12,15 @@ const client = relay => (clientP ||= import(SUPABASE_ESM).then(m =>
 
 export const relayConfigured = cfg => !!(cfg && cfg.relay && cfg.relay.url && cfg.relay.anonKey);
 
-export function openRelay({ session, config, useLocal = true, useRemote = true, onMessage, onStatus = () => {} }) {
+// channel: full channel name. Defaults to the private presenter channel for the session.
+export function openRelay({ session, channel, config, useLocal = true, useRemote = true, onMessage, onStatus = () => {} }) {
+  const name = channel || 'cue:' + session;
   const links = [];
   const status = { local: 'off', remote: 'off' };
   const emit = () => onStatus({ ...status });
 
   if (useLocal && 'BroadcastChannel' in window) {
-    const bc = new BroadcastChannel('cue:' + session);
+    const bc = new BroadcastChannel(name);
     bc.onmessage = e => onMessage(e.data, 'local');
     status.local = 'on';
     links.push({ send: m => bc.postMessage(m), close: () => bc.close() });
@@ -31,7 +33,7 @@ export function openRelay({ session, config, useLocal = true, useRemote = true, 
     const push = m => ch.send({ type: 'broadcast', event: 'm', payload: m });
     client(config.relay).then(sb => {
       if (closed) return;
-      ch = sb.channel('cue:' + session, { config: { broadcast: { self: false, ack: false } } });
+      ch = sb.channel(name, { config: { broadcast: { self: false, ack: false } } });
       ch.on('broadcast', { event: 'm' }, ({ payload }) => onMessage(payload, 'remote'));
       ch.subscribe(st => {
         status.remote = st === 'SUBSCRIBED' ? 'on' : st === 'CLOSED' ? 'off' : 'error';
@@ -61,4 +63,19 @@ export function openLobby({ config, key, info, onSessions }) {
     ch.subscribe(async st => { if (st === 'SUBSCRIBED' && cur) await ch.track(cur); });
   });
   return { update(i) { cur = i; if (ch) ch.track(i); }, close() { closed = true; if (ch) ch.unsubscribe(); } };
+}
+
+// Call a Cue database function (see supabase/schema.sql) over plain HTTPS, with no client library.
+export async function rpc(config, fn, args = {}) {
+  if (!relayConfigured(config)) throw new Error('No relay configured');
+  const key = config.relay.anonKey;
+  const headers = { apikey: key, 'Content-Type': 'application/json' };
+  if (key.startsWith('eyJ') && !config.relay.rpcUrl) headers.Authorization = `Bearer ${key}`;
+  const base = config.relay.rpcUrl || `${config.relay.url}/rest/v1`; // rpcUrl: local testing only
+  const res = await fetch(`${base}/rpc/${fn}`, { method: 'POST', headers, body: JSON.stringify(args) });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { }
+  if (!res.ok) { const e = new Error((data && (data.message || data.hint)) || res.statusText); e.code = data && data.code; throw e; }
+  return data;
 }
