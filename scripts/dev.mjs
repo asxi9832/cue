@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Local dev server: builds from ../slides (or SLIDES_DIR) and serves dist/. Rebuilds when the app shell is requested.
 import { createServer } from 'node:http';
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';

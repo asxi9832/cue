@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Shared cartridge helpers: notes parsing and validation. No dependencies.
 import { existsSync, readFileSync, statSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Cue screen app: pairing, library, stage. The screen is the source of truth for position;
 // remotes only send commands and render whatever state the screen broadcasts.
 import { openRelay, openLobby, relayConfigured } from '/remote/lib/relay.js';
@@ -9,6 +11,8 @@ const $ = (s, r = document) => r.querySelector(s);
 const view = $('#view');
 const HAS_RELAY = relayConfigured(CFG);
 const STALE_MS = 35000;
+// If you run a modified Cue for others, the AGPL asks you to point this at your modified source.
+const SOURCE_URL = 'https://github.com/asxi9832/cue';
 
 /* ---------------- session + relay ---------------- */
 let session = sessionStorage.getItem('cue:session');
@@ -253,7 +257,8 @@ async function cartridges() {
 
 async function viewLibrary() {
   view.innerHTML = `<div class="lib"><div class="top"><span class="logo"><i></i>cue</span><div class="r"><button class="pill" data-remote-pill></button>${CFG.dev ? '' : '<a class="btn sm ghost" href="/logout" title="Sign out of this device">Lock</a>'}</div></div>
-    <main><h2>Cartridges</h2><div class="grid" id="grid"></div></main></div>`;
+    <main><h2>Cartridges</h2><div class="grid" id="grid"></div>
+    <footer class="foot">Cue is free software under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">AGPL-3.0</a>. <a href="${SOURCE_URL}" target="_blank" rel="noopener">Source code</a></footer></main></div>`;
   view.querySelector('[data-remote-pill]').onclick = openPairModal;
   paintStatus();
   let list = [];

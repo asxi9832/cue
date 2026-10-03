@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Check a cartridge folder against the cue/1 spec. Usage: node scripts/validate.mjs <cartridge-folder> [...]
 import { resolve } from 'node:path';
 import { validateCartridge } from './lib/cartridge.mjs';

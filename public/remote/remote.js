@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Cue remote: presenter notes and controls on a phone, tablet, or a presenter window on the same computer.
 // It never holds its own position. It renders the state the screen broadcasts and sends commands back.
 import { openRelay, relayConfigured } from './lib/relay.js';
@@ -178,7 +180,8 @@ function showMore() {
     <div class="row"><span>Notes text size</span><div class="seg"><button data-p="smaller">A&minus;</button><button data-p="bigger">A+</button></div></div>
     ${!isCtl ? '<div class="row"><span>Control</span><button class="tgl" data-p="take">Take control</button></div>' : '<div class="row"><span>Control</span><span style="color:var(--go)">This device</span></div>'}
     <div class="row"><span>Sync</span><button class="tgl" data-p="resync">Resync with screen</button></div>
-    <div class="row danger"><span>${esc(name)}</span><button class="tgl" data-p="leave">Leave session</button></div>`);
+    <div class="row danger"><span>${esc(name)}</span><button class="tgl" data-p="leave">Leave session</button></div>
+    <p class="lic">Cue is free software under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">AGPL-3.0</a>. <a href="https://github.com/asxi9832/cue" target="_blank" rel="noopener">Source code</a></p>`);
   $('#sheetBody').onclick = e => {
     const p = e.target.closest('[data-p]'); if (!p) return;
     const k = p.dataset.p;

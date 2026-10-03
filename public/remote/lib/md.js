@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Small, escaping markdown renderer for presenter notes.
 // Supports paragraphs, lists, ### headings, > quotes, **bold**, *italic* and `code`.
 // List items that start with "**Click N:**" or "**Clicks N to M:**" are tagged so the remote can track builds.

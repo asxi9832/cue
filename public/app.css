@@ -117,3 +117,5 @@ kbd{font-family:var(--mono);font-size:11px;padding:2px 6px;border:1px solid var(
 .sessions a{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none}
 .sessions a:hover{border-color:var(--line2)}
 .sessions small{display:block;color:var(--faint);font-size:12px;margin-top:4px}
+.foot{margin-top:60px;font-size:12px;color:var(--faint)}
+.foot a{color:var(--muted)}

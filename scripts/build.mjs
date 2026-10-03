@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Build Cue into dist/: copy the app, pull cartridges from the slides repo, write config.
 //
 // Cartridge source (first match wins):

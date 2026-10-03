@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Cue service worker: makes the app installable and keeps decks playable when the venue network drops.
 const VERSION = 'cue-__CUE_VERSION__';
 const SHELL = ['/', '/index.html', '/app.css', '/app.js', '/config.js', '/vendor/qrcode.js', '/remote/lib/relay.js', '/remote/lib/util.js', '/remote/lib/md.js', '/manifest.webmanifest', '/icons/icon-192.png'];

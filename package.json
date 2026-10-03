@@ -9,5 +9,13 @@
     "dev": "node scripts/dev.mjs",
     "validate": "node scripts/validate.mjs"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "AGPL-3.0-only",
+  "author": "Rampant LLC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asxi9832/cue"
+  }
 }

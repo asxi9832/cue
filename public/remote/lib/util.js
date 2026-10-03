@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 const ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
 
 /** Random id from an unambiguous alphabet. 26 characters is about 128 bits. */

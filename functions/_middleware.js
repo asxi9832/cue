@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Password gate for Cue on Cloudflare Pages. Runs before every request.
 // Set CUE_PASSWORD (encrypted) in the Pages project to turn it on. The phone remote (/remote/)
 // stays open: it holds no content, and the session id in the QR code is its key.

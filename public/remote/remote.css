@@ -130,3 +130,5 @@ svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-l
   :root{--notes:21px}
   .ro{left:auto;width:min(420px,38vw);right:16px}
 }
+.lic{margin-top:18px;font-size:12px;color:var(--faint);text-align:center}
+.lic a{color:var(--muted)}

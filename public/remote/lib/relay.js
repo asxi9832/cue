@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Rampant LLC
 // Cue relay: one message bus for a session.
 //   local  = BroadcastChannel, for windows on the same computer (presenter window). Works offline.
 //   remote = Supabase Realtime broadcast, for phones and tablets anywhere.
