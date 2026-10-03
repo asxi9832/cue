@@ -36,7 +36,7 @@ What gets published: everything in the folder except dotfiles, `src/`, `node_mod
 | `accent`, `background` | no | Hex colors for the library card. Use the deck's own palette. |
 | `tags` | no | Array of strings. |
 
-Start from `cartridge-kit/template/` and copy the whole folder.
+Start from `cartridge-kit/template/` and copy the whole folder. If the slides repository has a brand template under `templates/<brand>/`, start from that instead; it carries the brand system and a layout library.
 
 ## 3. Deck rules (hard requirements)
 
@@ -90,7 +90,7 @@ Optional intro paragraph.
 
 1. **Brief.** Get the audience, goal, length, brand (colors, fonts, logo files), copy rules, and any source material. Ask when something is missing; do not invent a brand.
 2. **Outline first.** Propose the slide list with IDs, titles, build counts and a one-line purpose for each. Get approval before designing.
-3. **Build from the template.** Copy `cartridge-kit/template/` to `slides/<id>/`. Replace the tokens with the brand. Keep the protocol block intact.
+3. **Build from the template.** Copy the brand template (`slides/templates/<brand>/`) if one exists, otherwise `cartridge-kit/template/`, to `slides/<id>/`. Replace the tokens with the brand. Keep the protocol block intact.
 4. **Write notes alongside the slides,** not after. Each build gets a `**Click N:**` line.
 5. **Validate.** From the cue repository, run `node scripts/validate.mjs ../slides/<id>`. Fix every error.
 6. **Play it in Cue.** Run `npm run dev` in the cue repository, which builds from `../slides`, and open http://localhost:8787. Load the cartridge, then open the presenter window with P. Step through every slide and build, forward and backward, and check the notes stay in sync.
