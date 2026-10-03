@@ -78,9 +78,11 @@ The gate lives in `functions/_middleware.js` and runs on Cloudflare before any f
 
 ## 5. Publish on push from the slides repository
 
-1. Pages project → **Settings → Builds → Deploy hooks** → add a hook for the `main` branch and copy its URL.
-2. In the **slides** repository, go to **Settings → Secrets and variables → Actions** and add `CUE_DEPLOY_HOOK` with that URL.
-3. The `slides/.github/workflows/publish.yml` workflow calls the hook on every push to `main`, so a new or changed deck is live about a minute later.
+1. The slides repository needs the publish workflow. If it is missing, copy it from this repository: `cp -R examples/slides-repo/.github ../slides/`, then commit and push.
+2. Pages project → **Settings → Builds → Deploy hooks** → add a hook for the `main` branch and copy its URL. Treat the URL like a password: anyone who has it can trigger your builds.
+3. In the **slides** repository, go to **Settings → Secrets and variables → Actions → New repository secret**. Name it `CUE_DEPLOY_HOOK` and paste the URL.
+4. Test it: **Actions → Publish to Cue → Run workflow**, or `gh workflow run "Publish to Cue" -R <owner>/slides`. The log should say **Deploy triggered**. If it says **skipping**, the secret is missing or misnamed; the run still shows green because a missing hook is not an error.
+5. From then on, every push to `main` publishes the changed decks about a minute later.
 
 ## 6. Optional: a custom domain
 
@@ -101,6 +103,7 @@ Open the site in Chrome, Brave or Edge and choose **Install Cue** from the addre
 | Pairing screen says "Phone remote is off" | `SUPABASE_URL` or `SUPABASE_ANON_KEY` is missing. Redeploy after adding them. |
 | Phone stuck on "Waiting for the screen" | The screen tab is closed, or the Supabase project is paused. |
 | Library is empty | The build could not clone slides: check the token and `SLIDES_REPO`, and read the Pages build log. |
+| A pushed deck does not appear | The publish workflow log says "skipping": set `CUE_DEPLOY_HOOK` on the slides repository (step 5). Or the deck failed validation: check the Pages build log for `x` lines. |
 | The phone asks to log in | Option B: the `remote` bypass application is missing or its path is wrong. |
 | Everyone was signed out | `CUE_PASSWORD` changed. That is expected. |
 | Join page says it needs a lobby key | `CUE_LOBBY_KEY` is not set. |

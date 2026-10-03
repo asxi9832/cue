@@ -38,6 +38,7 @@ Decks live in their own repository, separate from Cue, so they stay private even
 cd ..
 gh repo create slides --private --clone   # or ask what they want to call it
 cp -R cue/examples/hello-world slides/hello-world
+cp -R cue/examples/slides-repo/.github slides/.github   # publishes decks to a hosted Cue on push (Gate B option 2)
 cat > slides/AGENTS.md <<'EOF'
 This repository holds Cue cartridges. To build or change one, read ../cue/cartridge-kit/CARTRIDGE.md
 and study ../cue/examples/hello-world. Validate with: node ../cue/scripts/validate.mjs <deck-folder>
@@ -65,6 +66,19 @@ If they named the folder something other than `slides`, or put it elsewhere, add
 
 ### Option 2: Cloudflare
 Follow `docs/DEPLOY.md` together, one section at a time, confirming each before moving on. Do Gate C first, so the Supabase values are ready when they set the Cloudflare environment variables. Points to stress:
+- **Publish on push (`DEPLOY.md` step 5):** without it, new decks only appear when someone redeploys by hand.
+  1. They create a Pages deploy hook.
+  2. They store its URL as the `CUE_DEPLOY_HOOK` Actions secret on the **slides** repository, either through GitHub's web UI or by running `gh secret set CUE_DEPLOY_HOOK -R <owner>/slides` themselves in their own terminal. The URL is a credential: they paste it, never you, and never in chat.
+  3. Confirm the secret exists. This shows the name only, never the value:
+     ```bash
+     gh secret list -R <owner>/slides
+     ```
+  4. Trigger the workflow and check its log:
+     ```bash
+     gh workflow run "Publish to Cue" -R <owner>/slides
+     gh run view -R <owner>/slides --log | grep -E "Deploy triggered|skipping"
+     ```
+     "Deploy triggered" means it works. "skipping" means the secret is missing or misnamed.
 - **Login wall:** Cloudflare Access is recommended. If its "Get started" button does nothing, try another browser; it has failed in Brave. The built-in password gate (`CUE_PASSWORD`) is the fallback.
 - **The `/remote` path must bypass the login,** so phones never need to sign in. The QR session code is the key.
 - **Every hostname needs the login wall.** When they add a custom domain, add it to **both** Access applications (the main one, and the `remote` bypass) **before** it goes live. A new hostname is public until it is added.

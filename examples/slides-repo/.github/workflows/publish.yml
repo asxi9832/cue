@@ -1,0 +1,16 @@
+# Rebuild the Cue site whenever a deck changes. Needs the CUE_DEPLOY_HOOK secret (see cue/docs/DEPLOY.md, step 5).
+name: Publish to Cue
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cue deploy
+        env:
+          HOOK: ${{ secrets.CUE_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "CUE_DEPLOY_HOOK secret not set; skipping"; exit 0; fi
+          curl -fsS -X POST "$HOOK" -o /dev/null && echo "Deploy triggered"
