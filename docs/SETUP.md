@@ -102,7 +102,8 @@ Ask: **"Do you want your audience to join from their phones: polls, word clouds,
   2. **Online only:** in Cloudflare Access, edit the `Cue remote` application and add a second path, `j`, so `https://their-domain/j` opens without a login. Verify `/j` returns 200 and `/` still redirects to the login.
   3. Explain that it is opt-in per deck: only slides they add on purpose use it (`cartridge-kit/CARTRIDGE.md` section 5).
   4. Mention consent: contact capture uses unchecked opt-in boxes, and public-facing decks should link a privacy notice.
-  5. Free Supabase handles about 200 people connected at once. For bigger rooms, the $25 per month Pro plan raises that.
+  5. Mention moderation: profanity is filtered automatically and questions go live on their own. For public audiences, a deck can require approval (`"approveQuestions": true`), and the presenter can switch it from the remote at any time.
+  6. Free Supabase handles about 200 people connected at once. For bigger rooms, the $25 per month Pro plan raises that.
 - **No:** skip it. Nothing is created until a deck asks for it.
 
 ## Step 3: Verify

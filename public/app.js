@@ -101,7 +101,7 @@ function exec(cmd, m = {}) {
     case 'timer': timer(m.action); break;
     case 'rehearse': m.action === 'stop' ? stopRehearsal() : startRehearsal(); break;
     case 'resync': sendDeck(); sendState(); sendAud(); break;
-    case 'qa': hostQuestion(m.action, m.id); break;
+    case 'qa': hostQuestion(m.action, m.id, m.value); break;
   }
 }
 
@@ -166,7 +166,7 @@ addEventListener('message', e => {
 /* ---------------- audience participation ---------------- */
 // One event per deck per browser session. Phones join on a separate public channel (cue-aud:<code>),
 // never the presenter channel. Phone messages are only hints to refresh; the database is the truth.
-const AUD = { code: null, key: null, ch: null, deck: null, step: null, wall: { count: 0, recent: [] }, results: {}, qs: { featured: null, items: [] }, host: { featured: null, items: [] }, timer: null, needs: new Set(), poll: null, reacts: [] };
+const AUD = { auto: true, code: null, key: null, ch: null, deck: null, step: null, wall: { count: 0, recent: [] }, results: {}, qs: { featured: null, items: [] }, host: { featured: null, items: [] }, timer: null, needs: new Set(), poll: null, reacts: [] };
 const audUrl = () => AUD.code ? `${CFG.remoteBase || location.origin}/j/#${AUD.code}` : ''; // trailing slash: no redirect hop on slow networks
 const hasAudience = () => HAS_RELAY && S.slides.some(s => s.interact);
 
@@ -189,6 +189,9 @@ async function audienceStart() {
       localStorage.setItem('cue:events', JSON.stringify(past.slice(0, 50)));
     } catch (e) { AUD.deck = null; toast('Audience features unavailable: ' + esc(e.message)); return; }
   }
+  // Questions go live once they pass the filter, unless the deck asks for presenter approval.
+  AUD.auto = !(S.cart.audience && S.cart.audience.approveQuestions);
+  rpc(CFG, 'cue_host_set', { p_code: AUD.code, p_key: AUD.key, p_auto: AUD.auto }).catch(() => {});
   AUD.ch = openRelay({ channel: 'cue-aud:' + AUD.code, config: CFG, onMessage: onAud, onStatus: st => { if (st.remote === 'on') pushStage(); } });
   AUD.poll = setInterval(() => { need('wall'); if (AUD.step && AUD.step.id) need('r:' + AUD.step.id); if (S.slides.some(s => s.interact && s.interact.type === 'qa')) need('qs'); }, 4000);
   need('wall'); need('qs'); audienceStep();
@@ -279,9 +282,9 @@ function pushDeck() {
   toDeck({ type: 'aud', code: AUD.code, url, short: url.replace(/^https?:\/\//, '').replace(/\/?#.*$/, ''), qr: qrData(url), wall: AUD.wall, results, questions: AUD.qs });
 }
 function sendAud() {
-  send({ t: 'aud', aud: AUD.code ? { code: AUD.code, url: audUrl(), count: AUD.wall.count || 0, step: AUD.step, filter: !(S.cart && S.cart.audience && S.cart.audience.filter === false), questions: AUD.host } : null });
+  send({ t: 'aud', aud: AUD.code ? { code: AUD.code, url: audUrl(), count: AUD.wall.count || 0, step: AUD.step, filter: !(S.cart && S.cart.audience && S.cart.audience.filter === false), auto: AUD.auto, questions: AUD.host } : null });
 }
-async function hostQuestion(action, id) {
+async function hostQuestion(action, id, value) {
   if (!AUD.code) return;
   const items = AUD.host.items || [];
   try {
@@ -293,7 +296,8 @@ async function hostQuestion(action, id) {
     else if (action === 'clear') await rpc(CFG, 'cue_host_question', { p_code: AUD.code, p_key: AUD.key, p_id: id, p_status: null, p_feature: false });
     else if (action === 'answered') await rpc(CFG, 'cue_host_question', { p_code: AUD.code, p_key: AUD.key, p_id: id, p_status: 'answered', p_feature: false });
     else if (action === 'hide') await rpc(CFG, 'cue_host_question', { p_code: AUD.code, p_key: AUD.key, p_id: id, p_status: 'hidden', p_feature: false });
-    else if (action === 'restore') await rpc(CFG, 'cue_host_question', { p_code: AUD.code, p_key: AUD.key, p_id: id, p_status: 'approved', p_feature: null });
+    else if (action === 'auto') { AUD.auto = !!value; await rpc(CFG, 'cue_host_set', { p_code: AUD.code, p_key: AUD.key, p_auto: AUD.auto }); toast(AUD.auto ? 'New questions go live automatically' : 'New questions wait for your approval'); }
+    else if (action === 'restore' || action === 'approve') await rpc(CFG, 'cue_host_question', { p_code: AUD.code, p_key: AUD.key, p_id: id, p_status: 'approved', p_feature: null });
   } catch (e) { toast('Could not update the question'); }
   need('qs');
 }

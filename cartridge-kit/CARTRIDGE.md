@@ -35,7 +35,7 @@ What gets published: everything in the folder except dotfiles, `src/`, `node_mod
 | `duration` | no | Target length in minutes. The remote timer shows it and turns red past it. |
 | `accent`, `background` | no | Hex colors for the library card. Use the deck's own palette. |
 | `tags` | no | Array of strings. |
-| `audience` | no | `{ "filter": false }` turns off automatic moderation of audience text. On by default. |
+| `audience` | no | `filter` (default `true`): automatic moderation of audience text; set `false` to turn it off. `approveQuestions` (default `false`): when `true`, questions wait for the presenter's approval before anyone else sees them. |
 
 Start from `cartridge-kit/template/` and copy the whole folder. If the slides repository has a brand template under `templates/<brand>/`, start from that instead; it carries the brand system and a layout library.
 
@@ -93,6 +93,7 @@ A slide opts in by containing a JSON script element marked `data-interact`:
 
 Rules:
 - Interaction `id`s are unique within the deck. Renaming one starts a fresh set of results.
+- Questions go live as soon as they pass the filter. For public or unfamiliar audiences, set `"audience": { "approveQuestions": true }` in `cartridge.json`, so each question waits for the presenter's approval; the presenter can also switch this live from the remote. Ask the person which they want.
 - In `cartridge.json`, `"audience": { "filter": false }` turns the automatic filter off, for example for a law enforcement training where words like "shoot" are legitimate. The default is on.
 - Render audience text with `textContent`, never `innerHTML`. Audience input is untrusted.
 - Contact data needs consent: keep the boxes unchecked by default, keep text messaging consent separate, and link a privacy notice when the deck is public-facing.

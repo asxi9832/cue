@@ -153,3 +153,9 @@ svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-l
 .qempty{color:var(--faint);font-size:14px}
 #qaq details{margin-top:10px}
 #qaq summary{color:var(--faint);font-size:13px;cursor:pointer}
+.qauto{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--faint);padding:8px 0 4px}
+#qaq .qauto .tgl{padding:6px 12px;border-radius:999px;font-size:12px}
+#qaq .qauto .tgl.on{color:var(--go);border-color:rgba(95,211,154,.45)}
+.qpend{margin:8px 0 4px;padding:10px;border-radius:12px;border:1px dashed rgba(255,181,71,.45)}
+.qpend > b{font-size:13px;color:var(--cue)}
+.qi.pending{border-color:rgba(255,181,71,.25)}

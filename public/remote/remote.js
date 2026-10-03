@@ -230,17 +230,21 @@ function paintAud() {
   if (!box) return;
   if (!aud || !aud.step || aud.step.type !== 'qa') { box.innerHTML = ''; box._sig = ''; return; }
   const items = (aud.questions && aud.questions.items) || [], feat = aud.questions && aud.questions.featured;
-  const sig = feat + '|' + items.map(q => q.id + q.status + q.votes).join();
+  const sig = feat + '|' + aud.auto + '|' + items.map(q => q.id + q.status + q.votes).join();
   if (box._sig === sig && box.innerHTML) return; // redraw only on change, so taps are never lost
   box._sig = sig;
-  const live = items.filter(q => q.status === 'approved' || q.status === 'pending');
+  const pending = items.filter(q => q.status === 'pending');
+  const live = items.filter(q => q.status === 'approved');
   const done = items.filter(q => q.status === 'answered');
   const hidden = items.filter(q => q.status === 'hidden');
   const row = q => `<div class="qi ${q.id === feat ? 'feat' : ''} ${q.status}"><div class="qb">${esc(q.body)}<small>${esc(q.emoji)} ${esc(q.name)} &middot; ${q.votes} vote${q.votes === 1 ? '' : 's'}${q.flagged ? ' &middot; filtered' : ''}</small></div>
     <div class="qa-acts">${q.status === 'hidden' ? `<button data-qa="restore" data-id="${q.id}">Restore</button>`
+      : q.status === 'pending' ? `<button data-qa="approve" data-id="${q.id}" class="pri">Approve</button><button data-qa="feature" data-id="${q.id}">Show now</button><button data-qa="hide" data-id="${q.id}">Hide</button>`
       : q.id === feat ? `<button data-qa="answered" data-id="${q.id}" class="pri">Done</button><button data-qa="clear" data-id="${q.id}">Off screen</button>`
       : `<button data-qa="feature" data-id="${q.id}" class="pri">Show</button>${q.status !== 'answered' ? `<button data-qa="answered" data-id="${q.id}">Answered</button>` : ''}<button data-qa="hide" data-id="${q.id}">Hide</button>`}</div></div>`;
-  box.innerHTML = `<div class="qhead"><b>Questions</b><span>${live.length} waiting</span><button data-qa="next" class="pri">${feat ? 'Next question' : 'Show top question'}</button></div>
+  box.innerHTML = `<div class="qhead"><b>Questions</b><span>${live.length} live</span><button data-qa="next" class="pri">${feat ? 'Next question' : 'Show top question'}</button></div>
+    <label class="qauto"><span>${aud.auto ? 'New questions go live automatically' : 'New questions wait for your approval'}</span><button data-qa="auto" data-value="${aud.auto ? '0' : '1'}" class="tgl ${aud.auto ? 'on' : ''}">${aud.auto ? 'Auto' : 'Approve'}</button></label>
+    ${pending.length ? `<div class="qpend"><b>Needs approval (${pending.length})</b>${pending.map(row).join('')}</div>` : ''}
     ${live.length ? live.map(row).join('') : '<p class="qempty">No questions yet. They appear here ranked by upvotes.</p>'}
     ${done.length ? `<details><summary>Answered (${done.length})</summary>${done.map(row).join('')}</details>` : ''}
     ${hidden.length ? `<details><summary>Hidden or filtered (${hidden.length})</summary>${hidden.map(row).join('')}</details>` : ''}`;
@@ -249,6 +253,6 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-qa]');
   if (!b) return;
   e.stopPropagation();
-  send({ t: 'cmd', cmd: 'qa', action: b.dataset.qa, id: b.dataset.id || null });
+  send({ t: 'cmd', cmd: 'qa', action: b.dataset.qa, id: b.dataset.id || null, value: b.dataset.value === '1' });
   haptic();
 }, true);
